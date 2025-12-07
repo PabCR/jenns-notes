@@ -25,8 +25,8 @@ class TestCreateResource:
         assert data["content"] == valid_resource_data["content"]
         assert data["tags"] == valid_resource_data["tags"]
         assert "id" in data
-        assert "user_id" in data
-        assert "created_at" in data
+        assert "userId" in data
+        assert "createdAt" in data
     
     async def test_create_resource_missing_title(self, client: AsyncClient):
         """Test creating resource without title."""
