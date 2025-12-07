@@ -9,9 +9,6 @@ A web application for oncology nurses to manage and share patient educational re
 ├── client/          # React + TypeScript + Vite frontend
 ├── server/          # FastAPI backend
 ├── shared/          # Shared TypeScript types
-├── prd.md           # Product Requirements Document
-├── tech-stack.md    # Technology stack reference
-└── implementation-plan.md  # Vertical implementation plan
 ```
 
 ## Getting Started

@@ -2,9 +2,11 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { BottomNavigation } from '@/components/BottomNavigation';
 import { Login } from '@/pages/Login';
 import { Signup } from '@/pages/Signup';
 import { Home } from '@/pages/Home';
+import { Upload } from '@/pages/Upload';
 import { Test } from '@/pages/Test';
 import { AuthCallback } from '@/pages/AuthCallback';
 import { ResetPassword } from '@/pages/ResetPassword';
@@ -27,6 +29,16 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Home />
+                  <BottomNavigation />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/upload"
+              element={
+                <ProtectedRoute>
+                  <Upload />
+                  <BottomNavigation />
                 </ProtectedRoute>
               }
             />

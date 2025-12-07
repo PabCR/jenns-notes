@@ -6,6 +6,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from dotenv import load_dotenv
 import os
 from app.utils.auth import get_current_user
+from app.routes import resources_router
 
 load_dotenv()
 
@@ -94,9 +95,25 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         headers["Access-Control-Allow-Origin"] = origin
         headers["Access-Control-Allow-Credentials"] = "true"
     
+    # Convert validation errors to a serializable format
+    errors = exc.errors()
+    # Ensure all error values are JSON-serializable
+    serializable_errors = []
+    for error in errors:
+        serializable_error = {}
+        for key, value in error.items():
+            # Convert any non-serializable values to strings
+            try:
+                import json
+                json.dumps(value)
+                serializable_error[key] = value
+            except (TypeError, ValueError):
+                serializable_error[key] = str(value)
+        serializable_errors.append(serializable_error)
+    
     return JSONResponse(
         status_code=422,
-        content={"detail": exc.errors()},
+        content={"detail": serializable_errors},
         headers=headers,
     )
 
@@ -124,4 +141,8 @@ async def options_me(request: Request):
 async def get_current_user_info(current_user: dict = Depends(get_current_user)):
     """Test endpoint to verify authentication."""
     return current_user
+
+
+# Register API routers
+app.include_router(resources_router, prefix="/api")
 
