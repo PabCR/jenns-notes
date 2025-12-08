@@ -71,7 +71,7 @@ export function EditResourceDialog({ resource, session, onClose }: EditResourceD
 
   return (
     <Dialog open={true} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Edit Resource</DialogTitle>
         </DialogHeader>

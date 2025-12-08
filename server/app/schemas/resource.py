@@ -27,7 +27,8 @@ class ResourceCreate(BaseModel):
     def validate_content(cls, v: str, info) -> str:
         """Validate content is provided and not whitespace-only.
         
-        For link type resources, also validates URL format.
+        For link type resources, validates URL format.
+        For PDF type resources, validates storage path format.
         """
         if not v or not v.strip():
             raise ValueError("content must not be empty or whitespace-only")
@@ -52,6 +53,16 @@ class ResourceCreate(BaseModel):
                 if isinstance(e, ValueError) and ("URL" in str(e) or "protocol" in str(e)):
                     raise
                 raise ValueError("content must be a valid URL")
+        
+        # Validate storage path format for PDF type
+        if resource_type == "pdf":
+            if not content.startswith("uploads/"):
+                raise ValueError("content must be a storage path starting with 'uploads/' for PDF type")
+            if not content.endswith(".pdf"):
+                raise ValueError("content must have .pdf extension for PDF type")
+            # Prevent path traversal
+            if ".." in content:
+                raise ValueError("content must be a valid storage path")
         
         return content
     

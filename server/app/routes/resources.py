@@ -1,4 +1,5 @@
 """API routes for resource management."""
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, or_, func
@@ -8,8 +9,11 @@ from typing import List, Optional
 
 from app.db import get_db
 from app.utils.auth import get_current_user
+from app.utils.supabase import delete_file_from_storage
 from app.models.resource import Resource
 from app.schemas.resource import ResourceCreate, ResourceUpdate, ResourceResponse
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/resources", tags=["resources"])
 
@@ -21,13 +25,10 @@ async def create_resource(
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new resource."""
-    # Validate content is provided for notes
-    # URL validation for links is handled in the ResourceCreate schema
-    if resource_data.type == "note" and not resource_data.content:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="content is required for note type resources",
-        )
+    # Validation is handled in ResourceCreate schema:
+    # - Notes: content is required
+    # - Links: content must be valid URL
+    # - PDFs: content must be valid storage path (uploads/...pdf)
     
     # Create resource
     resource = Resource(
@@ -171,6 +172,23 @@ async def delete_resource(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Resource not found",
         )
+    
+    # If resource is a PDF, delete the file from storage before deleting from DB
+    if resource.type == "pdf":
+        file_path = resource.content
+        # Validate path format (must start with "uploads/" and end with ".pdf", no "..")
+        if (
+            file_path
+            and file_path.startswith("uploads/")
+            and file_path.endswith(".pdf")
+            and ".." not in file_path
+        ):
+            # Attempt to delete from storage (best-effort, don't fail if it doesn't work)
+            delete_file_from_storage(file_path)
+        else:
+            logger.warning(
+                f"Invalid file path format for PDF resource {resource_id}: {file_path}"
+            )
     
     # Delete the resource using delete statement
     await db.execute(

@@ -268,41 +268,49 @@ Enable users to upload PDF files and store them securely in Supabase Storage.
 ### Backend Implementation
 
 #### 4.1 Supabase Storage Integration
-- [ ] Configure Supabase Storage client
-- [ ] Create presigned URL endpoint: `POST /api/objects/upload`
+- [x] Configure Supabase Storage client
+- [x] Create presigned URL endpoint: `POST /api/objects/upload`
   - Generate UUID for file
   - Create presigned PUT URL (15-minute TTL)
   - Return URL and file path
-- [ ] Create file serving endpoint: `GET /objects/:path`
+- [x] Create file serving endpoint: `GET /objects/:path`
   - Validate file exists
   - Stream file with correct Content-Type
   - Set Cache-Control headers
 
 #### 4.2 PDF Resource Creation
-- [ ] Update `POST /api/resources` to handle PDF type
-- [ ] Store storage path in `content` field
-- [ ] Validate file size (max 10MB - enforced in app, bucket allows 20MB)
-- [ ] Validate file type (PDF only)
+- [x] Update `POST /api/resources` to handle PDF type
+- [x] Store storage path in `content` field
+- [x] Validate file size (max 10MB - enforced in app, bucket allows 20MB)
+- [x] Validate file type (PDF only)
 
 ### Frontend Implementation
 
 #### 4.3 Upload Page - PDF Upload
-- [ ] Add "Select PDFs" button to upload page
-- [ ] Implement file input (accept .pdf, multiple files, max 10)
-- [ ] Validate file size (10MB max) and type
-- [ ] Show file list in pending resources
-- [ ] Implement direct upload to Supabase Storage:
+- [x] Add "Select PDFs" button to upload page
+- [x] Implement file input (accept .pdf, multiple files, max 10)
+- [x] Validate file size (10MB max) and type
+- [x] Show file list in pending resources
+- [x] Implement direct upload to Supabase Storage:
   - Request presigned URL from backend
   - Upload file directly to Supabase
   - Show upload progress
-- [ ] In review step:
+- [x] In review step:
   - Pre-fill title from filename (remove .pdf extension)
   - Show file size
   - Allow editing title and description
-- [ ] Update resource cards to show FileText icon
-- [ ] Add "View" button to resource cards (opens PDF in new tab via `/objects/:path`)
+- [x] Update resource cards to show FileText icon
+- [x] Add "View" button to resource cards (opens PDF in dialog with react-pdf viewer)
 
-**Deliverable**: User can upload PDF files, they are stored in Supabase Storage, and users can view them from the resources page.
+#### 4.4 PDF Viewer Component
+- [x] Install react-pdf and pdfjs-dist dependencies
+- [x] Create PDFViewer component with react-pdf Document/Page
+- [x] Add fetchPDFBlob helper function for authenticated PDF fetching
+- [x] Implement loading and error states
+- [x] Display PDF in dialog modal instead of new tab
+- [x] Add component tests for PDFViewer
+
+**Deliverable**: User can upload PDF files, they are stored in Supabase Storage, and users can view them in an embedded PDF viewer dialog from the resources page.
 
 ---
 
@@ -750,7 +758,7 @@ Deploy application to production environments.
 - [x] Phase 1: Basic Resource Management (Notes) ✅ (backend + frontend complete, 37 tests passing)
 - [x] Phase 2: Resource Search & Filtering ✅ (backend + frontend complete, search/filter with 18 new tests, resource selection)
 - [x] Phase 3: Link Resources ✅ (backend + frontend complete, URL validation, link creation UI, 18 new tests, 70 tests passing total)
-- [ ] Phase 4: PDF Upload & Storage
+- [x] Phase 4: PDF Upload & Storage ✅ (backend + frontend complete, presigned URLs, direct upload, file serving, PDF resource creation)
 - [ ] Phase 5: AI-Powered Tagging
 - [ ] Phase 6: Packet Creation & Management
 - [ ] Phase 7: Packet Sharing (QR & Links)
