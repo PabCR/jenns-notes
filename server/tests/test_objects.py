@@ -16,13 +16,15 @@ class TestPresignedUrlEndpoint:
             # Mock the storage client response
             mock_client = MagicMock()
             mock_bucket = MagicMock()
+            mock_storage_obj = MagicMock()
             mock_response = {
                 'signed_url': 'https://storage.supabase.co/object/sign/upload/path?token=abc123',
                 'token': 'abc123',
                 'path': 'uploads/test-uuid.pdf'
             }
             mock_bucket.create_signed_upload_url.return_value = mock_response
-            mock_client.storage.from_.return_value = mock_bucket
+            mock_storage_obj.from_.return_value = mock_bucket
+            mock_client.storage = mock_storage_obj
             mock_storage.return_value = mock_client
             
             response = await client.post(
@@ -88,7 +90,9 @@ class TestPresignedUrlEndpoint:
         with patch('app.routes.objects.get_supabase_storage_client') as mock_storage:
             mock_client = MagicMock()
             mock_bucket = MagicMock()
-            mock_client.storage.from_.return_value = mock_bucket
+            mock_storage_obj = MagicMock()
+            mock_storage_obj.from_.return_value = mock_bucket
+            mock_client.storage = mock_storage_obj
             mock_storage.return_value = mock_client
             
             # Generate multiple presigned URLs
@@ -126,9 +130,11 @@ class TestFileServingEndpoint:
             # Mock file download
             mock_client = MagicMock()
             mock_bucket = MagicMock()
+            mock_storage_obj = MagicMock()
             mock_file_data = b"%PDF-1.4 fake pdf content"
             mock_bucket.download.return_value = mock_file_data
-            mock_client.storage.from_.return_value = mock_bucket
+            mock_storage_obj.from_.return_value = mock_bucket
+            mock_client.storage = mock_storage_obj
             mock_storage.return_value = mock_client
             
             response = await client.get("/objects/uploads/test-file.pdf")
@@ -144,8 +150,10 @@ class TestFileServingEndpoint:
             # Mock file not found
             mock_client = MagicMock()
             mock_bucket = MagicMock()
+            mock_storage_obj = MagicMock()
             mock_bucket.download.side_effect = Exception("File not found")
-            mock_client.storage.from_.return_value = mock_bucket
+            mock_storage_obj.from_.return_value = mock_bucket
+            mock_client.storage = mock_storage_obj
             mock_storage.return_value = mock_client
             
             response = await client.get("/objects/uploads/nonexistent.pdf")
