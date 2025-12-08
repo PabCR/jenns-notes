@@ -51,7 +51,7 @@ export function Upload() {
   const [pdfResources, setPdfResources] = useState<PDFResource[]>([]);
   const [pdfTagInputs, setPdfTagInputs] = useState<Record<number, string>>({});
   const [singlePDFFile, setSinglePDFFile] = useState<File | null>(null);
-  const [singlePDFFilePath, setSinglePDFFilePath] = useState<string | null>(null);
+  const [_singlePDFFilePath, setSinglePDFFilePath] = useState<string | null>(null);
 
   const handleAddNote = () => {
     if (!content.trim()) {

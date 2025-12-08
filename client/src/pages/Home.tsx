@@ -275,7 +275,6 @@ export function Home() {
                     {resource.type === 'link' && (
                       <Button
                         variant="outline"
-                        size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
                           window.open(resource.content, '_blank', 'noopener,noreferrer');
@@ -288,7 +287,6 @@ export function Home() {
                     {resource.type === 'pdf' && (
                       <Button
                         variant="outline"
-                        size="sm"
                         onClick={(e) => {
                           e.stopPropagation();
                           setPdfViewerPath(resource.content);
@@ -301,7 +299,6 @@ export function Home() {
                     )}
                     <Button
                       variant="outline"
-                      size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleEdit(resource);
@@ -312,7 +309,6 @@ export function Home() {
                     </Button>
                     <Button
                       variant="outline"
-                      size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDelete(resource.id);

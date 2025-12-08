@@ -322,17 +322,23 @@ Automatically generate tags, descriptions, and metadata for resources using Goog
 ### Backend Implementation
 
 #### 5.1 Gemini Integration
-- [ ] Install `google-generativeai` Python SDK
-- [ ] Configure Gemini API client with API key
-- [ ] Create content extraction utilities:
-  - PDF text extraction (using `pypdf` or similar, limit 8000 chars)
-  - Webpage content extraction (using `httpx` + `beautifulsoup4`, limit 8000 chars)
-  - Note content (direct, limit 8000 chars)
-- [ ] Create `POST /api/resources/generate-tags` endpoint:
-  - Accept resource ID or content
-  - Extract content based on type
-  - Call Gemini API with oncology-focused prompt
-  - Return structured JSON:
+- [x] Install `google-genai` Python SDK (v1.53.0+)
+- [x] Configure Gemini API client with API key
+- [x] Create content extraction utilities:
+  - [x] PDF content handling: Accepts PDF bytes via file upload or downloads from storage (uses Gemini's native PDF support)
+  - [x] Webpage content extraction (using `httpx` + `beautifulsoup4`, limit 8000 chars)
+  - [x] Note content (direct, limit 8000 chars)
+- [x] Create `POST /api/resources/generate-tags` endpoint:
+  - [x] Accepts multipart/form-data with:
+    - `type`: Resource type ('pdf', 'link', or 'note')
+    - `file`: PDF file upload (for PDFs)
+    - `content`: Text content or storage path (for links/notes, or PDF fallback)
+  - [x] Extract content based on type:
+    - PDFs: Send PDF bytes directly to Gemini (uses native PDF support)
+    - Links: Extract webpage content server-side
+    - Notes: Use content directly
+  - [x] Call Gemini API with oncology-focused prompt
+  - [x] Return structured JSON:
     ```json
     {
       "tags": string[],
@@ -342,28 +348,34 @@ Automatically generate tags, descriptions, and metadata for resources using Goog
       "topic": string
     }
     ```
-  - Handle errors gracefully (return fallback tags)
+  - [x] Handle errors gracefully (return error responses for frontend handling)
 
 #### 5.2 Gemini Prompt Engineering
-- [ ] Design oncology-focused prompt
-- [ ] Request structured JSON output
-- [ ] Specify tag count (5-8 tags)
-- [ ] Request patient-friendly descriptions (1-2 sentences)
-- [ ] Include examples of cancer types, treatments, side effects
+- [x] Design oncology-focused prompt
+- [x] Use structured JSON output via JSON Schema (Pydantic model)
+- [x] Specify tag count (5-8 tags, max 10)
+- [x] Request patient-friendly descriptions (1-2 sentences)
+- [x] Include examples of cancer types, treatments, side effects
+- [x] Use `gemini-2.5-flash` model with structured outputs
 
 ### Frontend Implementation
 
 #### 5.3 Auto-Fill Feature
-- [ ] Add "Auto-fill" button to resource review card
-- [ ] On click:
-  - Show loading spinner
-  - Call `POST /api/resources/generate-tags`
-  - Populate tags, description, condition, audience, topic
-  - Show success toast
-- [ ] Handle errors (show error toast, keep existing data)
-- [ ] Allow user to edit/remove auto-generated content
+- [x] Add "Auto-fill with AI" button to resource review cards
+- [x] For single resources (note/link/single PDF):
+  - [x] Show loading state ("Extracting...")
+  - [x] Call `POST /api/resources/generate-tags` with File object (PDFs) or content (links/notes)
+  - [x] Populate tags, description, topic fields
+  - [x] Handle errors (show error message, keep existing data)
+- [x] For multiple PDFs:
+  - [x] Add "Auto-fill All" button to extract metadata for all PDFs in batch
+  - [x] Add individual "Auto-fill with AI" button per PDF resource
+  - [x] Track extraction state per PDF using Set of indices
+  - [x] Show progress ("Extracting X of Y...")
+- [x] Allow user to edit/remove auto-generated content
+- [x] Disable buttons during extraction to prevent duplicate requests
 
-**Deliverable**: User can click "Auto-fill" during resource review to automatically generate tags and descriptions using AI.
+**Deliverable**: User can click "Auto-fill with AI" during resource review to automatically generate tags and descriptions using AI. Supports both single resources and batch processing for multiple PDFs. ✅
 
 ---
 
@@ -759,7 +771,7 @@ Deploy application to production environments.
 - [x] Phase 2: Resource Search & Filtering ✅ (backend + frontend complete, search/filter with 18 new tests, resource selection)
 - [x] Phase 3: Link Resources ✅ (backend + frontend complete, URL validation, link creation UI, 18 new tests, 70 tests passing total)
 - [x] Phase 4: PDF Upload & Storage ✅ (backend + frontend complete, presigned URLs, direct upload, file serving, PDF resource creation)
-- [ ] Phase 5: AI-Powered Tagging
+- [x] Phase 5: AI-Powered Tagging ✅ (backend + frontend complete, Gemini integration with structured outputs, file upload support, batch processing)
 - [ ] Phase 6: Packet Creation & Management
 - [ ] Phase 7: Packet Sharing (QR & Links)
 - [ ] Phase 8: Public Packet View

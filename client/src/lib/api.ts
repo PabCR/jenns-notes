@@ -233,7 +233,6 @@ export async function generateTags(
     formData.append('file', content);
   } else {
     // For links/notes, send content as string
-    console.log(content);
     formData.append('content', content as string);
   }
   
