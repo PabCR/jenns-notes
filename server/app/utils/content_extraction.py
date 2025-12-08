@@ -18,7 +18,6 @@ def extract_webpage_content(url: str, max_chars: int = 8000) -> str:
         Extracted text content, truncated to max_chars if needed.
         Returns empty string on error.
     """
-    print(f"Fetching webpage content from: {url}")
     try:
         # Fetch webpage with timeout
         with httpx.Client(timeout=10.0, follow_redirects=True) as client:
