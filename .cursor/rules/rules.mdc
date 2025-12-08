@@ -1,0 +1,58 @@
+---
+alwaysApply: true
+---
+{
+  "rules": [
+    {
+        "description": "Always reference official API docs based on tech-stack.md",
+        "matches": ["*"],
+        "autoApply": true,
+        "priority": 80,
+        "instructions": [
+            "Before writing or modifying any implementation plan, code, or tests, consult the authoritative documentation for the technology in use. Use the browser tool to fetch the relevant official docs.",
+            "Determine which technologies are involved by checking tech-stack.md, then reference the correct documentation source.  [oai_citation:0‡tech-stack.md](sediment://file_00000000f37071fda7d19a18524ca72e)",
+            "When producing API usage, configuration, or integration code, follow official examples from the documentation rather than inventing custom patterns.",
+            "When ambiguity exists, resolve it by reading the official docs; do not assume behavior.",
+            "If the implementation touches multiple layers (frontend, backend, database, storage, auth, AI), reference documentation for each affected layer.",
+            "Prefer explicit, documented patterns from the frameworks and libraries listed in tech-stack.md over novel abstractions or assumptions.",
+            "If documentation contradicts existing code, trust the documentation and update code, the implementation plan, and associated tests accordingly."
+        ]
+    },
+    {
+      "description": "Enforce test-first implementation planning",
+      "matches": ["*"],
+      "autoApply": true,
+      "priority": 90,
+      "instructions": [
+        "When asked to implement or change functionality, first derive or update an explicit implementation plan before touching production code.",
+        "Within that implementation plan, define the testing strategy and concrete tests BEFORE any implementation steps. Specify test files, test cases, and expected behaviors.",
+        "When executing the plan, build or update the testing suite first, then implement only the code needed to satisfy those tests."
+      ]
+    },
+    {
+      "description": "Maintain strict minimal-code discipline",
+      "matches": ["*"],
+      "autoApply": true,
+      "priority": 88,
+      "instructions": [
+        "Favor the smallest possible implementation that satisfies the tests and the plan.",
+        "Avoid introducing new files, abstractions, helpers, types, or dependencies unless absolutely necessary.",
+        "Remove any code paths, branches, or structures that are not strictly required for the defined behavior.",
+        "Prefer direct, simple solutions over general-purpose architectures unless requirements explicitly demand extensibility.",
+        "Continuously evaluate whether a line or function can be removed, inlined, simplified, or deleted without breaking defined behavior."
+      ]
+    },
+    {
+      "description": "Keep implementation-plan.md and tests in sync with implementation",
+      "matches": ["*"],
+      "autoApply": true,
+      "priority": 85,
+      "instructions": [
+        "Whenever you create or modify an implementation plan, update @implementation-plan.md so it reflects the latest scope, steps, and decisions.",
+        "After completing an implementation step or revising the plan, ensure the testing suite is updated to reflect any new or changed behavior.",
+        "When finishing work tied to a plan, verify that @implementation-plan.md matches what was actually implemented and that all relevant tests exist and are aligned with final behavior.",
+        "If implementation details change mid-work, immediately reflect those changes in both @implementation-plan.md and the corresponding tests."
+      ]
+    }
+  ]
+}

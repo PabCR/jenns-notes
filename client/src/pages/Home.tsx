@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { getResources, deleteResource } from '@/lib/api';
 import type { Resource } from '../../shared/types';
 import { EditResourceDialog } from '@/components/EditResourceDialog';
+import { PDFViewer } from '@/components/PDFViewer';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Search, X, Link as LinkIcon, StickyNote, FileText } from 'lucide-react';
 
 export function Home() {
@@ -20,6 +22,8 @@ export function Home() {
   const [debouncedSearch, setDebouncedSearch] = useState<string>('');
   const [typeFilter, setTypeFilter] = useState<'note' | 'pdf' | 'link' | null>(null);
   const [selectedResources, setSelectedResources] = useState<Set<string>>(new Set());
+  const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
+  const [pdfViewerPath, setPdfViewerPath] = useState<string | null>(null);
 
   // Debounce search input
   useEffect(() => {
@@ -281,6 +285,20 @@ export function Home() {
                         Visit Link
                       </Button>
                     )}
+                    {resource.type === 'pdf' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPdfViewerPath(resource.content);
+                          setPdfViewerOpen(true);
+                        }}
+                        className="flex-1"
+                      >
+                        View
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -288,7 +306,7 @@ export function Home() {
                         e.stopPropagation();
                         handleEdit(resource);
                       }}
-                      className={resource.type === 'link' ? 'flex-1' : 'flex-1'}
+                      className={resource.type === 'link' || resource.type === 'pdf' ? 'flex-1' : 'flex-1'}
                     >
                       Edit
                     </Button>
@@ -319,6 +337,20 @@ export function Home() {
             onClose={handleEditClose}
           />
         )}
+
+        <Dialog open={pdfViewerOpen} onOpenChange={setPdfViewerOpen}>
+          <DialogContent className="max-w-full sm:max-w-6xl max-h-[90vh] h-[90vh] flex flex-col p-4 sm:p-6">
+            {pdfViewerPath && (
+              <PDFViewer
+                filePath={pdfViewerPath}
+                onClose={() => {
+                  setPdfViewerOpen(false);
+                  setPdfViewerPath(null);
+                }}
+              />
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

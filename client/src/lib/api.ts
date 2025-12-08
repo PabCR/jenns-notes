@@ -138,3 +138,68 @@ export async function deleteResource(
   );
 }
 
+/**
+ * Request a presigned URL for uploading a PDF file
+ */
+export async function requestPresignedUrl(
+  session: { access_token?: string } | null,
+  filename: string
+): Promise<{ uploadUrl: string; filePath: string }> {
+  return apiRequest<{ uploadUrl: string; filePath: string }>(
+    '/api/objects/upload',
+    session,
+    {
+      method: 'POST',
+      body: JSON.stringify({ filename }),
+    }
+  );
+}
+
+/**
+ * Upload a file directly to Supabase Storage using a presigned URL
+ */
+export async function uploadToPresignedUrl(
+  presignedUrl: string,
+  file: File
+): Promise<void> {
+  const response = await fetch(presignedUrl, {
+    method: 'PUT',
+    body: file,
+    headers: {
+      'Content-Type': 'application/pdf',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Upload failed: ${response.statusText}`);
+  }
+}
+
+/**
+ * Fetch a PDF file as a blob and return a blob URL
+ */
+export async function fetchPDFBlob(
+  session: { access_token?: string } | null,
+  filePath: string
+): Promise<string> {
+  const token = getAuthToken(session);
+  
+  const headers: HeadersInit = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}/objects/${encodeURIComponent(filePath)}`, {
+    headers,
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: response.statusText }));
+    throw new Error(errorData.detail || `Failed to fetch PDF: ${response.status}`);
+  }
+
+  const blob = await response.blob();
+  return URL.createObjectURL(blob);
+}
+

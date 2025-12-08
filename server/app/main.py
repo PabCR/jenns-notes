@@ -6,7 +6,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from dotenv import load_dotenv
 import os
 from app.utils.auth import get_current_user
-from app.routes import resources_router
+from app.routes import resources_router, objects_router
 
 load_dotenv()
 
@@ -145,4 +145,17 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user)):
 
 # Register API routers
 app.include_router(resources_router, prefix="/api")
+app.include_router(objects_router, prefix="/api/objects")
+
+# File serving endpoint (public, no /api prefix)
+from app.routes.objects import serve_file
+from app.utils.auth import get_current_user
+
+@app.get("/objects/{path:path}")
+async def serve_file_endpoint(
+    path: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """Serve a PDF file from storage."""
+    return await serve_file(path, current_user)
 
