@@ -8,6 +8,7 @@ from sqlalchemy.pool import StaticPool
 from sqlalchemy import Column, String, Text, Boolean, TypeDecorator
 from typing import AsyncGenerator
 from uuid import uuid4
+from httpx import ASGITransport
 
 from app.main import app
 from app.db import get_db
@@ -209,7 +210,7 @@ async def client(
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_current_user] = override_get_current_user
     
-    async with AsyncClient(app=app, base_url="http://test") as ac:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
     
     # Cleanup
