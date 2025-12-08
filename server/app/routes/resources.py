@@ -21,15 +21,9 @@ async def create_resource(
     db: AsyncSession = Depends(get_db),
 ):
     """Create a new resource."""
-    # Validate type is 'note' for Phase 1
-    if resource_data.type != "note":
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail="Only 'note' type resources are supported in Phase 1",
-        )
-    
     # Validate content is provided for notes
-    if not resource_data.content:
+    # URL validation for links is handled in the ResourceCreate schema
+    if resource_data.type == "note" and not resource_data.content:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="content is required for note type resources",

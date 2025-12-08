@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { getResources, deleteResource } from '@/lib/api';
 import type { Resource } from '../../shared/types';
 import { EditResourceDialog } from '@/components/EditResourceDialog';
-import { Search, X } from 'lucide-react';
+import { Search, X, Link as LinkIcon, StickyNote, FileText } from 'lucide-react';
 
 export function Home() {
   const { user, session } = useAuth();
@@ -214,7 +214,13 @@ export function Home() {
                 <CardHeader>
                   <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2 flex-1">
-                      <span className="text-2xl">📝</span>
+                      {resource.type === 'link' ? (
+                        <LinkIcon className="w-6 h-6 text-blue-600 flex-shrink-0" />
+                      ) : resource.type === 'note' ? (
+                        <StickyNote className="w-6 h-6 text-green-600 flex-shrink-0" />
+                      ) : (
+                        <FileText className="w-6 h-6 text-gray-600 flex-shrink-0" />
+                      )}
                       <CardTitle className="text-lg line-clamp-2">
                         {resource.title}
                       </CardTitle>
@@ -262,6 +268,19 @@ export function Home() {
                   </p>
 
                   <div className="flex gap-2 pt-2">
+                    {resource.type === 'link' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          window.open(resource.content, '_blank', 'noopener,noreferrer');
+                        }}
+                        className="flex-1"
+                      >
+                        Visit Link
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -269,7 +288,7 @@ export function Home() {
                         e.stopPropagation();
                         handleEdit(resource);
                       }}
-                      className="flex-1"
+                      className={resource.type === 'link' ? 'flex-1' : 'flex-1'}
                     >
                       Edit
                     </Button>
@@ -281,7 +300,7 @@ export function Home() {
                         handleDelete(resource.id);
                       }}
                       disabled={deletingResourceId === resource.id}
-                      className="flex-1 text-red-600 hover:text-red-700"
+                      className={resource.type === 'link' ? 'flex-1 text-red-600 hover:text-red-700' : 'flex-1 text-red-600 hover:text-red-700'}
                     >
                       Delete
                     </Button>

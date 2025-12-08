@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label';
 import { createResource } from '@/lib/api';
 
 type Step = 'type' | 'review' | 'confirm';
+type ResourceType = 'note' | 'link';
 
 export function Upload() {
   const navigate = useNavigate();
@@ -16,8 +17,12 @@ export function Upload() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');
 
-  // Step 1: Type Note
+  // Resource type
+  const [resourceType, setResourceType] = useState<ResourceType>('note');
+
+  // Step 1: Input (Note content or Link URL)
   const [content, setContent] = useState('');
+  const [linkUrl, setLinkUrl] = useState('');
 
   // Step 2: Review
   const [title, setTitle] = useState('');
@@ -25,15 +30,53 @@ export function Upload() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
 
+  const isValidUrl = (url: string): boolean => {
+    try {
+      const parsed = new URL(url);
+      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+    } catch {
+      return false;
+    }
+  };
+
+  const extractDomainFromUrl = (url: string): string => {
+    try {
+      const parsed = new URL(url);
+      return parsed.hostname.replace('www.', '');
+    } catch {
+      return 'Untitled Link';
+    }
+  };
+
   const handleAddNote = () => {
     if (!content.trim()) {
       setError('Please enter note content');
       return;
     }
     setError('');
+    setResourceType('note');
     // Pre-fill title from first line or use default
     const firstLine = content.split('\n')[0].trim();
     setTitle(firstLine || 'Untitled Note');
+    setStep('review');
+  };
+
+  const handleAddLink = () => {
+    const url = linkUrl.trim();
+    if (!url) {
+      setError('Please enter a URL');
+      return;
+    }
+    if (!isValidUrl(url)) {
+      setError('Please enter a valid URL (must start with http:// or https://)');
+      return;
+    }
+    setError('');
+    setResourceType('link');
+    // Pre-fill title from URL domain
+    const domain = extractDomainFromUrl(url);
+    setTitle(domain || 'Untitled Link');
+    setContent(url); // Store URL in content for submission
     setStep('review');
   };
 
@@ -69,8 +112,8 @@ export function Upload() {
       await createResource(session, {
         title: title.trim(),
         description: description.trim() || undefined,
-        type: 'note',
-        content: content.trim(),
+        type: resourceType,
+        content: resourceType === 'link' ? linkUrl.trim() : content.trim(),
         tags: tags.length > 0 ? tags : undefined,
       });
 
@@ -85,7 +128,9 @@ export function Upload() {
   const handleUploadMore = () => {
     // Reset all state
     setStep('type');
+    setResourceType('note');
     setContent('');
+    setLinkUrl('');
     setTitle('');
     setDescription('');
     setTags([]);
@@ -99,34 +144,65 @@ export function Upload() {
         <h1 className="text-3xl font-bold mb-8">Upload Resource</h1>
 
         {step === 'type' && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Type a Note</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="content">Note Content</Label>
-                <textarea
-                  id="content"
-                  rows={4}
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                  placeholder="Enter your note here..."
-                />
-              </div>
-              {error && (
-                <p className="text-sm text-red-600">{error}</p>
-              )}
-              <Button
-                onClick={handleAddNote}
-                disabled={loading}
-                className="w-full"
-              >
-                Add Note
-              </Button>
-            </CardContent>
-          </Card>
+          <div className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Type a Note</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="content">Note Content</Label>
+                  <textarea
+                    id="content"
+                    rows={4}
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    placeholder="Enter your note here..."
+                  />
+                </div>
+                <Button
+                  onClick={handleAddNote}
+                  disabled={loading || !content.trim()}
+                  className="w-full"
+                >
+                  Add Note
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Add External Link</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="linkUrl">URL</Label>
+                  <Input
+                    id="linkUrl"
+                    type="url"
+                    value={linkUrl}
+                    onChange={(e) => {
+                      setLinkUrl(e.target.value);
+                      setError('');
+                    }}
+                    placeholder="https://example.com"
+                    className={error && linkUrl ? 'border-red-500' : ''}
+                  />
+                  {error && linkUrl && (
+                    <p className="text-sm text-red-600">{error}</p>
+                  )}
+                </div>
+                <Button
+                  onClick={handleAddLink}
+                  disabled={loading || !linkUrl.trim()}
+                  className="w-full"
+                >
+                  Add Link
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {step === 'review' && (
@@ -135,6 +211,22 @@ export function Upload() {
               <CardTitle>Review Resource</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {resourceType === 'link' && (
+                <div className="space-y-2">
+                  <Label>URL Preview</Label>
+                  <div className="p-3 bg-gray-100 rounded-md">
+                    <a
+                      href={linkUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline break-all"
+                    >
+                      {linkUrl}
+                    </a>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="title">Title *</Label>
                 <Input
@@ -187,6 +279,10 @@ export function Upload() {
                   placeholder="Press Enter to add a tag"
                 />
               </div>
+
+              {error && (
+                <p className="text-sm text-red-600">{error}</p>
+              )}
 
               {error && (
                 <p className="text-sm text-red-600">{error}</p>

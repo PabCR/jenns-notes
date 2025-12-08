@@ -25,8 +25,8 @@ class TestCreateResource:
         assert data["content"] == valid_resource_data["content"]
         assert data["tags"] == valid_resource_data["tags"]
         assert "id" in data
-        assert "user_id" in data
-        assert "created_at" in data
+        assert "userId" in data
+        assert "createdAt" in data
     
     async def test_create_resource_missing_title(self, client: AsyncClient):
         """Test creating resource without title."""
@@ -106,30 +106,6 @@ class TestCreateResource:
             # If there's a serialization error, skip for now
             # This is a known issue with Pydantic ValueError serialization
             pytest.skip(f"Error serialization issue: {e}")
-    
-    async def test_create_resource_pdf_type_not_allowed(self, client: AsyncClient):
-        """Test creating resource with pdf type (not allowed in Phase 1)."""
-        data = {
-            "title": "Test PDF",
-            "type": "pdf",
-            "content": "test.pdf"
-        }
-        response = await client.post("/api/resources", json=data)
-        
-        assert response.status_code == 422
-        assert "Only 'note' type" in response.json()["detail"]
-    
-    async def test_create_resource_link_type_not_allowed(self, client: AsyncClient):
-        """Test creating resource with link type (not allowed in Phase 1)."""
-        data = {
-            "title": "Test Link",
-            "type": "link",
-            "content": "https://example.com"
-        }
-        response = await client.post("/api/resources", json=data)
-        
-        assert response.status_code == 422
-        assert "Only 'note' type" in response.json()["detail"]
     
     async def test_create_resource_missing_content(self, client: AsyncClient):
         """Test creating resource without content."""
@@ -1197,4 +1173,298 @@ class TestSearchResources:
         data = response.json()
         assert len(data) == 1
         assert "cancer" in data[0]["tags"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.api
+class TestLinkResourceURLValidation:
+    """Tests for URL validation in link resource creation."""
+    
+    async def test_create_link_with_valid_http_url(self, client: AsyncClient):
+        """Test creating link resource with valid HTTP URL."""
+        data = {
+            "title": "Example Site",
+            "type": "link",
+            "content": "http://example.com"
+        }
+        response = await client.post("/api/resources", json=data)
+        
+        assert response.status_code == 201
+        data_response = response.json()
+        assert data_response["type"] == "link"
+        assert data_response["content"] == "http://example.com"
+    
+    async def test_create_link_with_valid_https_url(self, client: AsyncClient):
+        """Test creating link resource with valid HTTPS URL."""
+        data = {
+            "title": "Secure Site",
+            "type": "link",
+            "content": "https://example.com"
+        }
+        response = await client.post("/api/resources", json=data)
+        
+        assert response.status_code == 201
+        data_response = response.json()
+        assert data_response["content"] == "https://example.com"
+    
+    async def test_create_link_with_url_path(self, client: AsyncClient):
+        """Test creating link resource with URL containing path."""
+        data = {
+            "title": "Page with Path",
+            "type": "link",
+            "content": "https://example.com/path/to/page"
+        }
+        response = await client.post("/api/resources", json=data)
+        
+        assert response.status_code == 201
+        data_response = response.json()
+        assert data_response["content"] == "https://example.com/path/to/page"
+    
+    async def test_create_link_with_url_query_params(self, client: AsyncClient):
+        """Test creating link resource with URL containing query parameters."""
+        data = {
+            "title": "Page with Query",
+            "type": "link",
+            "content": "https://example.com?param=value&other=test"
+        }
+        response = await client.post("/api/resources", json=data)
+        
+        assert response.status_code == 201
+        data_response = response.json()
+        assert data_response["content"] == "https://example.com?param=value&other=test"
+    
+    async def test_create_link_with_url_fragment(self, client: AsyncClient):
+        """Test creating link resource with URL containing fragment."""
+        data = {
+            "title": "Page with Fragment",
+            "type": "link",
+            "content": "https://example.com#section"
+        }
+        response = await client.post("/api/resources", json=data)
+        
+        assert response.status_code == 201
+        data_response = response.json()
+        assert data_response["content"] == "https://example.com#section"
+    
+    async def test_create_link_with_invalid_url_missing_protocol(self, client: AsyncClient):
+        """Test creating link resource with invalid URL (missing protocol)."""
+        data = {
+            "title": "Invalid URL",
+            "type": "link",
+            "content": "example.com"
+        }
+        response = await client.post("/api/resources", json=data)
+        
+        assert response.status_code == 422
+        errors = response.json()["detail"]
+        error_str = str(errors).lower()
+        assert "url" in error_str or "invalid" in error_str or "protocol" in error_str
+    
+    async def test_create_link_with_invalid_url_not_a_url(self, client: AsyncClient):
+        """Test creating link resource with invalid URL (not a URL)."""
+        data = {
+            "title": "Not a URL",
+            "type": "link",
+            "content": "not-a-url"
+        }
+        response = await client.post("/api/resources", json=data)
+        
+        assert response.status_code == 422
+    
+    async def test_create_link_with_empty_url(self, client: AsyncClient):
+        """Test creating link resource with empty URL."""
+        data = {
+            "title": "Empty URL",
+            "type": "link",
+            "content": ""
+        }
+        response = await client.post("/api/resources", json=data)
+        
+        assert response.status_code == 422
+    
+    async def test_create_link_with_whitespace_only_url(self, client: AsyncClient):
+        """Test creating link resource with whitespace-only URL."""
+        data = {
+            "title": "Whitespace URL",
+            "type": "link",
+            "content": "   "
+        }
+        response = await client.post("/api/resources", json=data)
+        
+        assert response.status_code == 422
+    
+    async def test_create_note_does_not_validate_url(self, client: AsyncClient):
+        """Test that note type resources do not validate URL format."""
+        data = {
+            "title": "Note with text",
+            "type": "note",
+            "content": "This is not a URL and should be fine for notes"
+        }
+        response = await client.post("/api/resources", json=data)
+        
+        assert response.status_code == 201
+        data_response = response.json()
+        assert data_response["type"] == "note"
+        assert data_response["content"] == "This is not a URL and should be fine for notes"
+
+
+@pytest.mark.asyncio
+@pytest.mark.api
+class TestLinkResourceCreation:
+    """Tests for link resource creation and CRUD operations."""
+    
+    async def test_create_link_resource_with_valid_url(self, client: AsyncClient):
+        """Test creating link resource with valid URL."""
+        data = {
+            "title": "Example Website",
+            "type": "link",
+            "content": "https://example.com"
+        }
+        response = await client.post("/api/resources", json=data)
+        
+        assert response.status_code == 201
+        data_response = response.json()
+        assert data_response["type"] == "link"
+        assert data_response["content"] == "https://example.com"
+        assert data_response["title"] == "Example Website"
+        assert "id" in data_response
+        assert "userId" in data_response
+        assert "createdAt" in data_response
+    
+    async def test_create_link_resource_stores_url_in_content(self, client: AsyncClient):
+        """Test that link resource stores URL in content field."""
+        url = "https://www.example.com/path?query=value#fragment"
+        data = {
+            "title": "Complex URL",
+            "type": "link",
+            "content": url
+        }
+        response = await client.post("/api/resources", json=data)
+        
+        assert response.status_code == 201
+        data_response = response.json()
+        assert data_response["content"] == url
+    
+    async def test_create_link_resource_with_title_and_description(self, client: AsyncClient):
+        """Test creating link resource with title and description."""
+        data = {
+            "title": "Medical Resource",
+            "description": "A helpful medical website",
+            "type": "link",
+            "content": "https://medical.example.com"
+        }
+        response = await client.post("/api/resources", json=data)
+        
+        assert response.status_code == 201
+        data_response = response.json()
+        assert data_response["title"] == "Medical Resource"
+        assert data_response["description"] == "A helpful medical website"
+        assert data_response["type"] == "link"
+    
+    async def test_create_link_resource_with_tags(self, client: AsyncClient):
+        """Test creating link resource with tags."""
+        data = {
+            "title": "Tagged Link",
+            "type": "link",
+            "content": "https://example.com",
+            "tags": ["medical", "oncology", "treatment"]
+        }
+        response = await client.post("/api/resources", json=data)
+        
+        assert response.status_code == 201
+        data_response = response.json()
+        assert data_response["tags"] == ["medical", "oncology", "treatment"]
+    
+    async def test_link_resource_appears_in_list(self, client: AsyncClient):
+        """Test that link resource appears in list resources."""
+        # Create a link resource
+        link_data = {
+            "title": "List Test Link",
+            "type": "link",
+            "content": "https://list-test.example.com"
+        }
+        create_response = await client.post("/api/resources", json=link_data)
+        assert create_response.status_code == 201
+        link_id = create_response.json()["id"]
+        
+        # List resources
+        list_response = await client.get("/api/resources")
+        assert list_response.status_code == 200
+        resources = list_response.json()
+        
+        # Find our link resource
+        link_resource = next((r for r in resources if r["id"] == link_id), None)
+        assert link_resource is not None
+        assert link_resource["type"] == "link"
+        assert link_resource["content"] == "https://list-test.example.com"
+    
+    async def test_get_link_resource_by_id(self, client: AsyncClient):
+        """Test retrieving link resource by ID."""
+        # Create a link resource
+        link_data = {
+            "title": "Get Test Link",
+            "type": "link",
+            "content": "https://get-test.example.com"
+        }
+        create_response = await client.post("/api/resources", json=link_data)
+        assert create_response.status_code == 201
+        link_id = create_response.json()["id"]
+        
+        # Get the resource
+        get_response = await client.get(f"/api/resources/{link_id}")
+        assert get_response.status_code == 200
+        resource = get_response.json()
+        assert resource["id"] == link_id
+        assert resource["type"] == "link"
+        assert resource["content"] == "https://get-test.example.com"
+    
+    async def test_update_link_resource(self, client: AsyncClient):
+        """Test updating link resource metadata."""
+        # Create a link resource
+        link_data = {
+            "title": "Original Title",
+            "type": "link",
+            "content": "https://original.example.com"
+        }
+        create_response = await client.post("/api/resources", json=link_data)
+        assert create_response.status_code == 201
+        link_id = create_response.json()["id"]
+        
+        # Update the resource
+        update_data = {
+            "title": "Updated Title",
+            "description": "Updated description",
+            "tags": ["updated", "tags"]
+        }
+        update_response = await client.patch(
+            f"/api/resources/{link_id}",
+            json=update_data
+        )
+        assert update_response.status_code == 200
+        updated_resource = update_response.json()
+        assert updated_resource["title"] == "Updated Title"
+        assert updated_resource["description"] == "Updated description"
+        assert updated_resource["tags"] == ["updated", "tags"]
+        # Content should remain unchanged
+        assert updated_resource["content"] == "https://original.example.com"
+    
+    async def test_delete_link_resource(self, client: AsyncClient):
+        """Test deleting link resource."""
+        # Create a link resource
+        link_data = {
+            "title": "Delete Test Link",
+            "type": "link",
+            "content": "https://delete-test.example.com"
+        }
+        create_response = await client.post("/api/resources", json=link_data)
+        assert create_response.status_code == 201
+        link_id = create_response.json()["id"]
+        
+        # Delete the resource
+        delete_response = await client.delete(f"/api/resources/{link_id}")
+        assert delete_response.status_code == 204
+        
+        # Verify it's deleted
+        get_response = await client.get(f"/api/resources/{link_id}")
+        assert get_response.status_code == 404
 
