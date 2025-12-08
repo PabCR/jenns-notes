@@ -14,6 +14,7 @@ class TestPresignedUrlEndpoint:
         """Test creating a presigned URL with valid filename."""
         with patch('app.routes.objects.get_supabase_storage_client') as mock_storage:
             # Mock the storage client response
+            mock_client = MagicMock()
             mock_bucket = MagicMock()
             mock_response = {
                 'signed_url': 'https://storage.supabase.co/object/sign/upload/path?token=abc123',
@@ -21,7 +22,8 @@ class TestPresignedUrlEndpoint:
                 'path': 'uploads/test-uuid.pdf'
             }
             mock_bucket.create_signed_upload_url.return_value = mock_response
-            mock_storage.return_value.from_.return_value = mock_bucket
+            mock_client.storage.from_.return_value = mock_bucket
+            mock_storage.return_value = mock_client
             
             response = await client.post(
                 "/api/objects/upload",
@@ -84,8 +86,10 @@ class TestPresignedUrlEndpoint:
     async def test_create_presigned_url_generates_unique_paths(self, client: AsyncClient):
         """Test that multiple requests generate different file paths."""
         with patch('app.routes.objects.get_supabase_storage_client') as mock_storage:
+            mock_client = MagicMock()
             mock_bucket = MagicMock()
-            mock_storage.return_value.from_.return_value = mock_bucket
+            mock_client.storage.from_.return_value = mock_bucket
+            mock_storage.return_value = mock_client
             
             # Generate multiple presigned URLs
             paths = []
@@ -120,10 +124,12 @@ class TestFileServingEndpoint:
         """Test serving a PDF file with correct headers."""
         with patch('app.routes.objects.get_supabase_storage_client') as mock_storage:
             # Mock file download
+            mock_client = MagicMock()
             mock_bucket = MagicMock()
             mock_file_data = b"%PDF-1.4 fake pdf content"
             mock_bucket.download.return_value = mock_file_data
-            mock_storage.return_value.from_.return_value = mock_bucket
+            mock_client.storage.from_.return_value = mock_bucket
+            mock_storage.return_value = mock_client
             
             response = await client.get("/objects/uploads/test-file.pdf")
             
@@ -136,9 +142,11 @@ class TestFileServingEndpoint:
         """Test serving a non-existent file returns 404."""
         with patch('app.routes.objects.get_supabase_storage_client') as mock_storage:
             # Mock file not found
+            mock_client = MagicMock()
             mock_bucket = MagicMock()
             mock_bucket.download.side_effect = Exception("File not found")
-            mock_storage.return_value.from_.return_value = mock_bucket
+            mock_client.storage.from_.return_value = mock_bucket
+            mock_storage.return_value = mock_client
             
             response = await client.get("/objects/uploads/nonexistent.pdf")
             
