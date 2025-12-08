@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { createResource, requestPresignedUrl, uploadToPresignedUrl } from '@/lib/api';
+import { createResource, requestPresignedUrl, uploadToPresignedUrl, generateTags } from '@/lib/api';
 import { Upload as UploadIcon } from 'lucide-react';
 
 type Step = 'type' | 'review' | 'confirm';
@@ -19,7 +19,7 @@ interface PendingPDF {
 interface PDFResource {
   fileName: string;
   file: File;
-  filePath?: string;
+  filePath?: string; // Only set after upload to bucket
   title: string;
   description: string;
   tags: string[];
@@ -30,6 +30,8 @@ export function Upload() {
   const { session } = useAuth();
   const [step, setStep] = useState<Step>('type');
   const [loading, setLoading] = useState(false);
+  const [extracting, setExtracting] = useState(false);
+  const [extractingPDFs, setExtractingPDFs] = useState<Set<number>>(new Set());
   const [error, setError] = useState<string>('');
 
   // Resource type
@@ -49,6 +51,7 @@ export function Upload() {
   const [pdfResources, setPdfResources] = useState<PDFResource[]>([]);
   const [pdfTagInputs, setPdfTagInputs] = useState<Record<number, string>>({});
   const [singlePDFFile, setSinglePDFFile] = useState<File | null>(null);
+  const [singlePDFFilePath, setSinglePDFFilePath] = useState<string | null>(null);
 
   const handleAddNote = () => {
     if (!content.trim()) {
@@ -143,43 +146,53 @@ export function Upload() {
     setPendingPDFs(pendingPDFs.filter((_, i) => i !== index));
   };
 
-  const handleAddPDFs = () => {
+  const handleAddPDFs = async () => {
     if (pendingPDFs.length === 0) {
       setError('Please select at least one PDF file');
       return;
     }
 
+    if (!session) {
+      setError('You must be logged in to upload PDFs');
+      return;
+    }
+
     setError('');
 
-    // Create PDF resources from pending PDFs (no upload yet)
-    const resources: PDFResource[] = pendingPDFs.map((pdf) => {
-      const filename = pdf.file.name.replace(/\.pdf$/i, '');
-      return {
-        fileName: pdf.file.name,
-        file: pdf.file,
-        title: filename || 'Untitled PDF',
-        description: '',
-        tags: [],
-      };
-    });
+    try {
+      // Store PDFs in memory only - no upload until "Create Resource"
+      const resources: PDFResource[] = pendingPDFs.map((pdf) => {
+        const filename = pdf.file.name.replace(/\.pdf$/i, '');
+        return {
+          fileName: pdf.file.name,
+          file: pdf.file,
+          title: filename || 'Untitled PDF',
+          description: '',
+          tags: [],
+        };
+      });
 
-    // If only one PDF, use single resource flow
-    if (pendingPDFs.length === 1) {
-      const resource = resources[0];
-      setResourceType('pdf');
-      setTitle(resource.title);
-      setDescription(resource.description);
-      setTags(resource.tags);
-      setSinglePDFFile(resource.file);
-      setPendingPDFs([]);
-      setPdfResources([]);
-      setStep('review');
-    } else {
-      // Multiple PDFs - show preview with all resources
-      setResourceType('pdf');
-      setPdfResources(resources);
-      setPendingPDFs([]);
-      setStep('review');
+      // If only one PDF, use single resource flow
+      if (pendingPDFs.length === 1) {
+        const resource = resources[0];
+        setResourceType('pdf');
+        setTitle(resource.title);
+        setDescription(resource.description);
+        setTags(resource.tags);
+        setSinglePDFFile(resource.file);
+        setSinglePDFFilePath(null); // Will be set after upload
+        setPendingPDFs([]);
+        setPdfResources([]);
+        setStep('review');
+      } else {
+        // Multiple PDFs - show preview with all resources
+        setResourceType('pdf');
+        setPdfResources(resources);
+        setPendingPDFs([]);
+        setStep('review');
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to process PDFs');
     }
   };
 
@@ -197,9 +210,122 @@ export function Upload() {
     setTags(tags.filter(tag => tag !== tagToRemove));
   };
 
+  const handleExtractPDFMetadata = async () => {
+    if (!session || !singlePDFFile) {
+      setError('You must be logged in and PDF file must be selected');
+      return;
+    }
+
+    setExtracting(true);
+    setError('');
+
+    try {
+      const metadata = await generateTags(session, 'pdf', singlePDFFile);
+      
+      // Populate fields with extracted metadata
+      if (metadata.tags && metadata.tags.length > 0) {
+        setTags(metadata.tags);
+      }
+      if (metadata.description) {
+        setDescription(metadata.description);
+      }
+      if (metadata.topic && !title.trim()) {
+        // Use topic as title if title is empty
+        setTitle(metadata.topic);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to extract metadata');
+    } finally {
+      setExtracting(false);
+    }
+  };
+
+  const handleExtractMetadata = async () => {
+    if (!session) return;
+    
+    setExtracting(true);
+    setError('');
+
+    try {
+      const contentValue = resourceType === 'link' ? linkUrl.trim() : title.trim();
+      const metadata = await generateTags(session, resourceType, contentValue);
+      
+      if (metadata.tags?.length > 0) setTags(metadata.tags);
+      if (metadata.description && !description.trim()) setDescription(metadata.description);
+      if (metadata.topic && !title.trim()) setTitle(metadata.topic);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to extract metadata');
+    } finally {
+      setExtracting(false);
+    }
+  };
+
+  const handleExtractPDFMetadataForIndex = async (index: number) => {
+    const resource = pdfResources[index];
+    if (!session || !resource.file) {
+      setError('You must be logged in and PDF file must be selected');
+      return;
+    }
+
+    setExtractingPDFs(new Set(extractingPDFs).add(index));
+    setError('');
+
+    try {
+      const metadata = await generateTags(session, 'pdf', resource.file);
+      
+      // Update resource with extracted metadata
+      const updates: Partial<PDFResource> = {};
+      if (metadata.tags && metadata.tags.length > 0) {
+        updates.tags = metadata.tags;
+      }
+      if (metadata.description) {
+        updates.description = metadata.description;
+      }
+      if (metadata.topic && !resource.title.trim()) {
+        updates.title = metadata.topic;
+      }
+      
+      handleUpdatePDFResource(index, updates);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to extract metadata');
+    } finally {
+      const newSet = new Set(extractingPDFs);
+      newSet.delete(index);
+      setExtractingPDFs(newSet);
+    }
+  };
+  const handleExtractAllPDFMetadata = async () => {
+    if (!session || pdfResources.length === 0) return;
+    
+    const allIndices = pdfResources.map((_, i) => i);
+    setExtractingPDFs(new Set(allIndices));
+    setError('');
+
+    await Promise.all(
+      pdfResources.map((resource, index) =>
+        generateTags(session, 'pdf', resource.file)
+          .then((metadata) => {
+            const updates: Partial<PDFResource> = {};
+            if (metadata.tags?.length > 0) updates.tags = metadata.tags;
+            if (metadata.description) updates.description = metadata.description;
+            if (metadata.topic && !resource.title.trim()) updates.title = metadata.topic;
+            handleUpdatePDFResource(index, updates);
+          })
+          .catch(() => {})
+          .finally(() => {
+            setExtractingPDFs(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(index);
+              return newSet;
+            });
+          })
+      )
+    );
+  };
+
   const handleUpdatePDFResource = (index: number, updates: Partial<PDFResource>) => {
-    setPdfResources(
-      pdfResources.map((resource, i) =>
+    setPdfResources(prev =>
+      prev.map((resource, i) =>
         i === index ? { ...resource, ...updates } : resource
       )
     );
@@ -340,6 +466,7 @@ export function Upload() {
     setPdfResources([]);
     setPdfTagInputs({});
     setSinglePDFFile(null);
+    setSinglePDFFilePath(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -429,7 +556,9 @@ export function Upload() {
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => fileInputRef.current?.click()}
+                    onClick={() => {
+                      fileInputRef.current?.click();
+                    }}
                     disabled={loading}
                     className="w-full"
                   >
@@ -463,7 +592,6 @@ export function Upload() {
                             <Button
                               type="button"
                               variant="ghost"
-                              size="sm"
                               onClick={() => handleRemovePDF(index)}
                               className="ml-2"
                             >
@@ -504,6 +632,19 @@ export function Upload() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+            {pdfResources.length > 0 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleExtractAllPDFMetadata}
+                  disabled={extractingPDFs.size > 0 || pdfResources.some(r => !r.file)}
+                  className="w-full bg-green-500 text-white"
+                >
+                  {extractingPDFs.size > 0 
+                    ? `Extracting ${extractingPDFs.size} of ${pdfResources.length}...` 
+                    : 'Auto-fill All'}
+                </Button>
+              )}
               {/* Multiple PDFs preview */}
               {pdfResources.length > 0 ? (
                 <div className="space-y-6">
@@ -614,6 +755,15 @@ export function Upload() {
                           placeholder="Press Enter to add a tag"
                         />
                       </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => handleExtractPDFMetadataForIndex(index)}
+                        disabled={extractingPDFs.has(index) || !resource.file}
+                        className="w-full bg-blue-500 text-white"
+                      >
+                        {extractingPDFs.has(index) ? 'Extracting...' : 'Auto-fill with AI'}
+                      </Button>
                     </div>
                   ))}
 
@@ -632,7 +782,8 @@ export function Upload() {
                       disabled={
                         loading ||
                         pdfResources.length === 0 ||
-                        pdfResources.some((r) => !r.title.trim())
+                        pdfResources.some((r) => !r.title.trim()) ||
+                        extractingPDFs.size > 0
                       }
                       className="flex-1"
                     >
@@ -726,7 +877,27 @@ export function Upload() {
                       placeholder="Press Enter to add a tag"
                     />
                   </div>
-
+                  {resourceType === 'pdf' ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleExtractPDFMetadata}
+                      disabled={extracting || !singlePDFFile}
+                      className="w-full bg-blue-500 text-white"
+                    >
+                      {extracting ? 'Extracting...' : 'Auto-fill with AI'}
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleExtractMetadata}
+                      disabled={extracting || (resourceType === 'link' ? !linkUrl.trim() : !content.trim())}
+                      className="w-full bg-blue-500 text-white"
+                    >
+                      {extracting ? 'Extracting...' : 'Auto-fill with AI'}
+                    </Button>
+                  )}
                   {error && <p className="text-sm text-red-600">{error}</p>}
 
                   <div className="flex gap-2">
@@ -744,9 +915,10 @@ export function Upload() {
                     >
                       Remove
                     </Button>
+                    
                     <Button
                       onClick={handleSubmit}
-                      disabled={loading || !title.trim()}
+                      disabled={loading || !title.trim() || extracting}
                       className="flex-1"
                     >
                       {loading ? 'Creating...' : 'Create Resource'}
@@ -791,4 +963,3 @@ export function Upload() {
     </div>
   );
 }
-
