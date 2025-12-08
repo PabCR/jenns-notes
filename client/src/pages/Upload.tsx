@@ -30,24 +30,6 @@ export function Upload() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState('');
 
-  const isValidUrl = (url: string): boolean => {
-    try {
-      const parsed = new URL(url);
-      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-    } catch {
-      return false;
-    }
-  };
-
-  const extractDomainFromUrl = (url: string): string => {
-    try {
-      const parsed = new URL(url);
-      return parsed.hostname.replace('www.', '');
-    } catch {
-      return 'Untitled Link';
-    }
-  };
-
   const handleAddNote = () => {
     if (!content.trim()) {
       setError('Please enter note content');
@@ -55,9 +37,7 @@ export function Upload() {
     }
     setError('');
     setResourceType('note');
-    // Pre-fill title from first line or use default
-    const firstLine = content.split('\n')[0].trim();
-    setTitle(firstLine || 'Untitled Note');
+    setTitle(content.split('\n')[0].trim() || 'Untitled Note');
     setStep('review');
   };
 
@@ -67,22 +47,29 @@ export function Upload() {
       setError('Please enter a URL');
       return;
     }
+    
     // Automatically prepend https:// if no protocol is present
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       url = 'https://' + url;
-      setLinkUrl(url); // Update state with the URL that has protocol
     }
-    if (!isValidUrl(url)) {
+    
+    // Validate URL
+    try {
+      const parsed = new URL(url);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        setError('Please enter a valid URL');
+        return;
+      }
+      
+      setError('');
+      setResourceType('link');
+      setLinkUrl(url);
+      setContent(url);
+      setTitle(parsed.hostname.replace('www.', '') || 'Untitled Link');
+      setStep('review');
+    } catch {
       setError('Please enter a valid URL');
-      return;
     }
-    setError('');
-    setResourceType('link');
-    // Pre-fill title from URL domain
-    const domain = extractDomainFromUrl(url);
-    setTitle(domain || 'Untitled Link');
-    setContent(url); // Store URL in content for submission
-    setStep('review');
   };
 
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
