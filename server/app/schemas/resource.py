@@ -3,6 +3,7 @@ from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
+from urllib.parse import urlparse
 
 
 class ResourceCreate(BaseModel):
@@ -24,12 +25,35 @@ class ResourceCreate(BaseModel):
     @field_validator("content")
     @classmethod
     def validate_content(cls, v: str, info) -> str:
-        """Validate content is provided and not whitespace-only."""
+        """Validate content is provided and not whitespace-only.
+        
+        For link type resources, also validates URL format.
+        """
         if not v or not v.strip():
             raise ValueError("content must not be empty or whitespace-only")
-        if info.data.get("type") == "note" and not v.strip():
+        
+        content = v.strip()
+        resource_type = info.data.get("type")
+        
+        if resource_type == "note" and not content:
             raise ValueError("content is required for note type")
-        return v.strip()
+        
+        # Validate URL format for link type
+        if resource_type == "link":
+            try:
+                parsed = urlparse(content)
+                # Check that URL has a scheme (http/https) and netloc (domain)
+                if not parsed.scheme or not parsed.netloc:
+                    raise ValueError("content must be a valid URL with protocol (http:// or https://)")
+                # Only allow http and https schemes
+                if parsed.scheme not in ["http", "https"]:
+                    raise ValueError("URL must use http:// or https:// protocol")
+            except Exception as e:
+                if isinstance(e, ValueError) and ("URL" in str(e) or "protocol" in str(e)):
+                    raise
+                raise ValueError("content must be a valid URL")
+        
+        return content
     
     @field_validator("type")
     @classmethod

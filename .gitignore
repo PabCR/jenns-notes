@@ -44,16 +44,10 @@ logs/
 .coverage
 .pytest_cache/
 htmlcov/
+client/coverage/
+server/test_results.txt
 
 # Alembic
 alembic/versions/*.pyc
 
-prd.md
-tech-stack.md
-implementation-plan.md
-SETUP.md
-
 test_results.txt
-
-
-package-lock.json
