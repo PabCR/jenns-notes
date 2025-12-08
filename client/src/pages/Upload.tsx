@@ -62,13 +62,18 @@ export function Upload() {
   };
 
   const handleAddLink = () => {
-    const url = linkUrl.trim();
+    let url = linkUrl.trim();
     if (!url) {
       setError('Please enter a URL');
       return;
     }
+    // Automatically prepend https:// if no protocol is present
+    if (!url.startsWith('http://') && !url.startsWith('https://')) {
+      url = 'https://' + url;
+      setLinkUrl(url); // Update state with the URL that has protocol
+    }
     if (!isValidUrl(url)) {
-      setError('Please enter a valid URL (must start with http:// or https://)');
+      setError('Please enter a valid URL');
       return;
     }
     setError('');
