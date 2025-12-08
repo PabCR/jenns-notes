@@ -203,3 +203,55 @@ export async function fetchPDFBlob(
   return URL.createObjectURL(blob);
 }
 
+/**
+ * Generate tags and metadata for a resource using AI
+ */
+export async function generateTags(
+  session: { access_token?: string } | null,
+  type: 'pdf' | 'link' | 'note',
+  content: string | File
+): Promise<{
+  tags: string[];
+  description?: string;
+  condition?: string;
+  audience?: string;
+  topic?: string;
+}> {
+  const token = getAuthToken(session);
+  const headers: Record<string, string> = {};
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  // Always use multipart/form-data as backend expects Form fields
+  const formData = new FormData();
+  formData.append('type', type);
+  
+  if (type === 'pdf' && content instanceof File) {
+    // For PDFs, send file
+    formData.append('file', content);
+  } else {
+    // For links/notes, send content as string
+    console.log(content);
+    formData.append('content', content as string);
+  }
+  
+  // Don't set Content-Type header - browser will set it with boundary
+  const body = formData;
+
+  const response = await fetch(`${API_BASE_URL}/api/resources/generate-tags`, {
+    method: 'POST',
+    headers,
+    body,
+    credentials: 'include',
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ detail: response.statusText }));
+    throw new Error(errorData.detail || `API error: ${response.status}`);
+  }
+
+  return response.json();
+}
+

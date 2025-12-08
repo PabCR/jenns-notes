@@ -1,6 +1,7 @@
 """API routes for resource management."""
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, File, Form
+from fastapi import UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, or_, func
 from sqlalchemy.orm import selectinload
@@ -12,10 +13,24 @@ from app.utils.auth import get_current_user
 from app.utils.supabase import delete_file_from_storage
 from app.models.resource import Resource
 from app.schemas.resource import ResourceCreate, ResourceUpdate, ResourceResponse
+from app.schemas.gemini import ResourceMetadata
+from app.utils.content_extraction import (
+    extract_webpage_content,
+    extract_note_content,
+    extract_pdf_content,
+)
+from app.utils.gemini import generate_resource_metadata
+from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/resources", tags=["resources"])
+
+
+class GenerateTagsRequest(BaseModel):
+    """Request schema for generate-tags endpoint."""
+    type: str  # 'pdf', 'link', or 'note'
+    content: str  # Raw content: PDF storage path, URL, or note text
 
 
 @router.post("", response_model=ResourceResponse, status_code=status.HTTP_201_CREATED)
@@ -197,4 +212,110 @@ async def delete_resource(
     await db.commit()
     
     return None
+
+
+@router.post("/generate-tags", response_model=ResourceMetadata, status_code=status.HTTP_200_OK)
+async def generate_tags(
+    type: str = Form(...),
+    content: Optional[str] = Form(None),
+    file: Optional[UploadFile] = File(None),
+    current_user: dict = Depends(get_current_user),
+):
+    """Generate tags and metadata for a resource using AI.
+    
+    Accepts either:
+    - multipart/form-data with file upload (for PDFs) or content (for links/notes)
+    - JSON with GenerateTagsRequest (backward compatibility)
+    
+    Returns structured metadata including tags, description, condition, audience, and topic.
+    """
+    # Validate resource type
+    if type not in ["pdf", "link", "note"]:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid resource type: {type}. Must be one of: pdf, link, note",
+        )
+    
+    # Extract content based on type
+    try:
+        if type == "pdf":
+            # For PDFs, prefer file upload over storage path
+            if file:
+                # Read PDF bytes from uploaded file
+                pdf_bytes = await file.read()
+                if not pdf_bytes:
+                    raise HTTPException(
+                        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                        detail="Uploaded file is empty",
+                    )
+            elif content:
+                # Fallback: download PDF bytes from storage (backward compatibility)
+                pdf_bytes = extract_pdf_content(content)
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Either file upload or content (storage path) must be provided for PDFs",
+                )
+            
+            # Generate metadata using Gemini API with PDF bytes
+            try:
+                metadata = generate_resource_metadata(pdf_bytes=pdf_bytes)
+                return metadata
+            except ValueError as e:
+                logger.error(f"Validation error generating metadata: {str(e)}")
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=str(e),
+                )
+            except Exception as e:
+                logger.error(f"Error generating metadata with Gemini API: {str(e)}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Failed to generate metadata: {str(e)}",
+                )
+        else:
+            # Extract text content for links and notes
+            if not content:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Content must be provided for links and notes",
+                )
+            
+            extracted_content = ""
+            if type == "link":
+                extracted_content = extract_webpage_content(content)
+            else:  # note
+                extracted_content = extract_note_content(content)
+            
+            # Check if content extraction succeeded
+            if not extracted_content or not extracted_content.strip():
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail="Unable to extract content from this URL. The website may block automated access. Please add tags and description manually.",
+                )
+            
+            # Generate metadata using Gemini API
+            try:
+                metadata = generate_resource_metadata(content=extracted_content)
+                return metadata
+            except ValueError as e:
+                logger.error(f"Validation error generating metadata: {str(e)}")
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=str(e),
+                )
+            except Exception as e:
+                logger.error(f"Error generating metadata with Gemini API: {str(e)}")
+                raise HTTPException(
+                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                    detail=f"Failed to generate metadata: {str(e)}",
+                )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error extracting content for {type}: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Failed to extract content: {str(e)}",
+        )
 
