@@ -61,68 +61,51 @@ Focus on oncology nursing context and ensure tags are relevant and useful for or
     return prompt
 
 
-def generate_resource_metadata(content: str = None, pdf_bytes: bytes = None) -> ResourceMetadata:
-    """Generate structured metadata from resource content using Gemini AI.
-    
-    Args:
-        content: Extracted text content from resource (for notes/links)
-        pdf_bytes: PDF file bytes (for PDFs)
-    
-    Returns:
-        ResourceMetadata object with tags, description, condition, audience, and topic
-    
-    Raises:
-        ValueError: If both content and pdf_bytes are None, or both are provided
-        Exception: If Gemini API call fails or response is invalid
-    """
+def _validate_inputs(content: str | None, pdf_bytes: bytes | None) -> None:
     if not content and not pdf_bytes:
         raise ValueError("Either content or pdf_bytes must be provided")
-    
     if content and pdf_bytes:
         raise ValueError("Cannot provide both content and pdf_bytes")
-    
+    if content is not None and not content.strip():
+        raise ValueError("Content cannot be empty")
+
+
+def _generate_with_pdf(client: genai.Client, pdf_bytes: bytes) -> ResourceMetadata:
+    pdf_part = types.Part.from_bytes(data=pdf_bytes, mime_type="application/pdf")
+    prompt = build_oncology_prompt("")
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=[pdf_part, prompt],
+        config={
+            "response_mime_type": "application/json",
+            "response_json_schema": ResourceMetadata.model_json_schema(),
+        },
+    )
+    return ResourceMetadata.model_validate_json(response.text)
+
+
+def _generate_with_text(client: genai.Client, content: str) -> ResourceMetadata:
+    prompt = build_oncology_prompt(content)
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents=prompt,
+        config={
+            "response_mime_type": "application/json",
+            "response_json_schema": ResourceMetadata.model_json_schema(),
+        },
+    )
+    return ResourceMetadata.model_validate_json(response.text)
+
+
+def generate_resource_metadata(content: str = None, pdf_bytes: bytes = None) -> ResourceMetadata:
+    """Generate structured metadata from resource content using Gemini AI."""
+    _validate_inputs(content, pdf_bytes)
+
     try:
         client = get_gemini_client()
-        
         if pdf_bytes:
-            # Use inline PDF approach for PDF files
-            prompt = build_oncology_prompt("")
-            pdf_part = types.Part.from_bytes(
-                data=pdf_bytes,
-                mime_type='application/pdf',
-            )
-            
-            # Call Gemini API with PDF + prompt
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=[pdf_part, prompt],
-                config={
-                    "response_mime_type": "application/json",
-                    "response_json_schema": ResourceMetadata.model_json_schema(),
-                },
-            )
-        else:
-            # Use text-based approach for notes/links
-            if not content or not content.strip():
-                raise ValueError("Content cannot be empty")
-            
-            prompt = build_oncology_prompt(content)
-            
-            # Call Gemini API with structured output
-            response = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-                config={
-                    "response_mime_type": "application/json",
-                    "response_json_schema": ResourceMetadata.model_json_schema(),
-                },
-            )
-        
-        # Parse response
-        metadata = ResourceMetadata.model_validate_json(response.text)
-        
-        return metadata
-    
-    except Exception as e:
+            return _generate_with_pdf(client, pdf_bytes)
+        return _generate_with_text(client, content or "")
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error generating metadata with Gemini: {str(e)}")
         raise
