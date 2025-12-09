@@ -15,7 +15,7 @@ import { useResourceBrowser } from './useResourceBrowser';
  * Home entry point that stitches filter controls with resource list UI.
  */
 export function HomePage() {
-  const { user, session } = useAuth();
+  const { user, session, signOut } = useAuth();
   const {
     state,
     setState,
@@ -49,6 +49,7 @@ export function HomePage() {
           onSearchChange={(value) => setState({ searchQuery: value })}
           onClear={clearSearch}
           onTypeChange={(value) => setState({ typeFilter: value })}
+          onSignOut={signOut}
         />
 
         {state.error && (

@@ -1,6 +1,7 @@
 /**
  * Search and filter controls for the Home resource list.
  */
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, X } from 'lucide-react';
 
@@ -11,6 +12,7 @@ interface FilterBarProps {
   onSearchChange(value: string): void;
   onClear(): void;
   onTypeChange(value: 'note' | 'pdf' | 'link' | null): void;
+  onSignOut(): void;
 }
 
 /**
@@ -23,6 +25,7 @@ export function FilterBar({
   onSearchChange,
   onClear,
   onTypeChange,
+  onSignOut,
 }: FilterBarProps) {
   return (
     <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-8">
@@ -58,6 +61,7 @@ export function FilterBar({
           <option value="link">Links</option>
         </select>
         <span className="text-sm text-gray-600 hidden md:inline">{userEmail}</span>
+        <Button variant="outline" onClick={onSignOut}>Sign Out</Button>
       </div>
     </div>
   );
