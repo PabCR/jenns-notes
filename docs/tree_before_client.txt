@@ -1,0 +1,51 @@
+src
+├── __tests__
+│   ├── AuthCallback.test.tsx
+│   ├── AuthContext.test.tsx
+│   ├── ForgotPassword.test.tsx
+│   ├── Login.test.tsx
+│   ├── ProtectedRoute.test.tsx
+│   ├── ResetPassword.test.tsx
+│   ├── Signup.test.tsx
+│   ├── Upload.test.tsx
+│   ├── auth.integration.test.tsx
+│   └── setup.ts
+├── assets
+│   └── react.svg
+├── components
+│   ├── __tests__
+│   │   └── PDFViewer.test.tsx
+│   ├── ui
+│   │   ├── button.tsx
+│   │   ├── card.tsx
+│   │   ├── dialog.tsx
+│   │   ├── input.tsx
+│   │   └── label.tsx
+│   ├── BottomNavigation.tsx
+│   ├── EditResourceDialog.tsx
+│   ├── ErrorBoundary.tsx
+│   ├── PDFViewer.tsx
+│   └── ProtectedRoute.tsx
+├── contexts
+│   └── AuthContext.tsx
+├── hooks
+├── lib
+│   ├── api.ts
+│   ├── supabase.ts
+│   └── utils.ts
+├── pages
+│   ├── __tests__
+│   │   ├── Home.test.tsx
+│   │   └── Upload.test.tsx
+│   ├── AuthCallback.tsx
+│   ├── ForgotPassword.tsx
+│   ├── Home.tsx
+│   ├── Login.tsx
+│   ├── ResetPassword.tsx
+│   ├── Signup.tsx
+│   ├── Test.tsx
+│   └── Upload.tsx
+├── App.css
+├── App.tsx
+├── index.css
+└── main.tsx

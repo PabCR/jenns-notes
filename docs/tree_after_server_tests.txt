@@ -1,0 +1,34 @@
+tests
+├── fixtures
+│   ├── __init__.py
+│   ├── client.py
+│   ├── database.py
+│   ├── resources.py
+│   └── users.py
+├── gemini
+│   ├── __init__.py
+│   ├── test_content_extraction.py
+│   └── test_generate_tags_endpoint.py
+├── resources
+│   ├── __init__.py
+│   ├── test_authentication.py
+│   ├── test_create_resource_content_validation.py
+│   ├── test_create_resource_success.py
+│   ├── test_create_resource_title_and_type.py
+│   ├── test_delete_resource.py
+│   ├── test_get_resource.py
+│   ├── test_link_resource_creation.py
+│   ├── test_link_resource_invalid_urls.py
+│   ├── test_link_resource_valid_urls.py
+│   ├── test_list_resources.py
+│   ├── test_pdf_resource_creation.py
+│   ├── test_search_content_matching.py
+│   ├── test_search_content_primary.py
+│   ├── test_search_edge_cases.py
+│   ├── test_search_filters_and_permissions.py
+│   └── test_update_resource.py
+├── README.md
+├── TEST_STATUS.md
+├── __init__.py
+├── conftest.py
+└── test_objects.py
