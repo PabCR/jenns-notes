@@ -1,1 +1,0 @@
-"""Resource endpoint test modules."""

@@ -1,66 +1,30 @@
 # Test Status
 
-## Current Status
+## Current Snapshot
 
-### ✅ All Tests Passing
-**37 tests passing** with PostgreSQL test database:
-- Validation error tests (missing fields, invalid types, whitespace, etc.)
-- Authentication error tests
-- CRUD operation tests (create, read, update, delete)
-- Ownership validation tests
-- Error handling tests
+- **16 backend API tests** grouped under `tests/api/`.
+- Suites execute against **PostgreSQL only**. Export `TEST_DATABASE_URL` (e.g. `postgresql+asyncpg://postgres:password@localhost:5432/test_db`) before running pytest.
+- Scope mirrors implementation-plan phases **0‑6** only (auth, resources, search, link/PDF, Gemini tagging, packets).
 
-### Test Database Setup
-Tests require a PostgreSQL test database because:
-- Resource model uses PostgreSQL-specific types (UUID, ARRAY, TIMESTAMP WITH TIME ZONE)
+## Test Matrix
 
-## Quick Fix: Use PostgreSQL Test Database
+| File | Scenarios |
+| --- | --- |
+| `tests/api/test_auth.py` | create/list resources reject unauthenticated requests |
+| `tests/api/test_resources.py` | note CRUD (5), validation (2), search/filter (2), link create, link validation, pdf create, pdf validation |
+| `tests/api/test_gemini.py` | generate-tags success, invalid type failure |
+| `tests/api/test_packets.py` | packet create, list, get, update (swap resources), delete |
 
-1. Create a test database in Supabase or local PostgreSQL
-2. Set environment variable:
-   ```bash
-   export TEST_DATABASE_URL="postgresql+asyncpg://postgres:password@host:5432/test_db"
-   ```
-3. Run migrations:
-   ```bash
-   DATABASE_URL=$TEST_DATABASE_URL alembic upgrade head
-   ```
-4. Run tests:
-   ```bash
-   pytest
-   ```
+## Expectations
 
-## Test Coverage
+- Failures should map 1:1 to feature regressions. No duplicate or future-phase coverage remains.
+- When a new phase is implemented, add **one** representative test in the appropriate file (or a new short file) and document it here.
 
-### Test Coverage (37 tests)
-- ✅ Create resource with valid data
-- ✅ List resources (empty and with data)
-- ✅ Get single resource
-- ✅ Update resource (full and partial)
-- ✅ Delete resource
-- ✅ Missing required fields
-- ✅ Empty strings and whitespace-only
-- ✅ Invalid type values
-- ✅ Wrong type for Phase 1
-- ✅ Invalid data types
-- ✅ Invalid UUID formats
-- ✅ Non-existent resources
-- ✅ Accessing another user's resources
-
-### Authentication Tests
-- ✅ Missing authentication
-- ✅ Invalid authentication tokens
-
-## Running Tests
+## Running Locally
 
 ```bash
-# Run all tests (requires PostgreSQL test database)
+cd server
+source venv/bin/activate
+export TEST_DATABASE_URL="postgresql+asyncpg://user:pass@localhost:5432/test_db"
 pytest
-
-# Run with verbose output
-pytest -v
-
-# Run specific test class
-pytest tests/test_resources.py::TestCreateResource
 ```
-
