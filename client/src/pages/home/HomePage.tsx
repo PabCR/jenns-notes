@@ -1,6 +1,7 @@
 /**
  * Home page renders the resource library with search, filters, and preview.
  */
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -9,6 +10,7 @@ import { EditResourceDialog } from '@/components/EditResourceDialog';
 import { PDFViewer } from '@/components/PDFViewer';
 import { FilterBar } from './components/FilterBar';
 import { ResourceGrid } from './components/ResourceGrid';
+import { PacketSheet } from './components/PacketSheet';
 import { useResourceBrowser } from './useResourceBrowser';
 
 /**
@@ -27,6 +29,7 @@ export function HomePage() {
     openPdfViewer,
     closePdfViewer,
   } = useResourceBrowser(session);
+  const [packetSheetOpen, setPacketSheetOpen] = useState(false);
 
   const formatDate = (dateString: string) =>
     new Date(dateString).toLocaleDateString('en-US', {
@@ -131,6 +134,30 @@ export function HomePage() {
             )}
           </DialogContent>
         </Dialog>
+
+        {state.selectedResources.size > 0 && (
+          <div className="fixed bottom-24 right-4 z-30">
+            <Button
+              onClick={() => setPacketSheetOpen(true)}
+              className="shadow-lg"
+            >
+              Create Packet ({state.selectedResources.size} selected)
+            </Button>
+          </div>
+        )}
+
+        <PacketSheet
+          open={packetSheetOpen}
+          onOpenChange={setPacketSheetOpen}
+          selectedResourceIds={state.selectedResources}
+          resources={state.resources}
+          session={session}
+          onSuccess={() => {
+            setState({ selectedResources: new Set(), successMessage: 'Packet created successfully' });
+            window.setTimeout(() => setState({ successMessage: '' }), 3000);
+            fetchResources();
+          }}
+        />
       </div>
     </div>
   );

@@ -26,7 +26,9 @@ export interface Packet {
   name: string;
   description?: string;
   shareLink: string;
-  resourceIds: string[];
+  resourceIds?: string[];
+  resourceCount?: number;
+  resources?: Resource[];
   createdAt: string;
   updatedAt: string;
 }

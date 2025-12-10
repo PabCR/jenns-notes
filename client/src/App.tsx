@@ -7,6 +7,7 @@ import { Login } from '@/pages/Login';
 import { Signup } from '@/pages/Signup';
 import { Home } from '@/pages/Home';
 import { Upload } from '@/pages/Upload';
+import { PacketsPage } from '@/pages/packets/PacketsPage';
 import { Test } from '@/pages/Test';
 import { AuthCallback } from '@/pages/AuthCallback';
 import { ResetPassword } from '@/pages/ResetPassword';
@@ -38,6 +39,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Upload />
+                  <BottomNavigation />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/packets"
+              element={
+                <ProtectedRoute>
+                  <PacketsPage />
                   <BottomNavigation />
                 </ProtectedRoute>
               }

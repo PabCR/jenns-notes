@@ -444,40 +444,40 @@ CREATE INDEX idx_packet_resources_resource_id ON packet_resources(resource_id);
 ### Frontend Implementation
 
 #### 6.3 Packet Builder UI
-- [ ] On Resources page, when resources selected:
+- [x] On Resources page, when resources selected:
   - Show fixed "Create Packet (X selected)" button
-- [ ] Create side sheet component:
+- [x] Create side sheet component:
   - Packet name input (required)
   - Description textarea (optional)
   - Selected resources list with remove buttons
   - "Create Packet" button
-- [ ] After packet creation:
+- [x] After packet creation:
   - Show success message
-  - Display QR code overlay (placeholder for now)
-  - Show shareable URL
-  - "Done" button to dismiss
+  - [ ] Display QR code overlay (placeholder for now) - Phase 7
+  - [ ] Show shareable URL - Phase 7
+  - [ ] "Done" button to dismiss - Phase 7
 
 #### 6.4 Packets Page
-- [ ] Create `/packets` route
-- [ ] Build packet grid (responsive)
-- [ ] Display packet cards:
+- [x] Create `/packets` route
+- [x] Build packet grid (responsive)
+- [x] Display packet cards:
   - Packet name
   - Description
   - Resource count
   - Created date
   - Action buttons (Edit, Delete - Share coming next)
-- [ ] Add empty state
-- [ ] Add loading skeletons
-- [ ] Update bottom navigation (enable Packets tab)
+- [x] Add empty state
+- [x] Add loading skeletons
+- [x] Update bottom navigation (enable Packets tab)
 
 #### 6.5 Edit Packet Dialog
-- [ ] Create edit dialog/modal
-- [ ] Show packet name and description inputs
-- [ ] Show resources list with checkboxes:
+- [x] Create edit dialog/modal
+- [x] Show packet name and description inputs
+- [x] Show resources list with checkboxes:
   - "Included in Packet" section (pre-checked)
   - "Available Resources" section (unchecked)
-- [ ] Save changes button
-- [ ] Cancel button
+- [x] Save changes button
+- [x] Cancel button
 
 **Deliverable**: User can create packets from selected resources, view all packets, edit packet contents, and delete packets.
 
