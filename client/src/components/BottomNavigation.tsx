@@ -7,7 +7,7 @@ export function BottomNavigation() {
   const navItems = [
     { path: '/', label: 'Home', icon: '🏠' },
     { path: '/upload', label: 'Upload', icon: '📤' },
-    { path: '/packets', label: 'Packets', icon: '📦', disabled: true },
+    { path: '/packets', label: 'Packets', icon: '📦' },
   ];
 
   return (

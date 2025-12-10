@@ -16,3 +16,10 @@ export {
   fetchPDFBlob,
 } from './api/objects';
 export { generateTags } from './api/metadata';
+export {
+  createPacket,
+  getPacket,
+  listPackets,
+  updatePacket,
+  deletePacket,
+} from './api/packets';

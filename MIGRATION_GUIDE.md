@@ -11,3 +11,6 @@
 ## Testing/Imports
 - Replace any imports of `tests.conftest.TestResourceModel` with `tests.fixtures.database.TestResourceModel`.
 - For link/PDF search/create tests, target the specific module under `tests/resources/` instead of the previous monolithic `test_resources.py`.
+
+## Packets
+- Packets: added packets folder/service/API following resource patterns. Packet creation UI in `pages/home/components/PacketSheet.tsx`, packets listing page in `pages/packets/PacketsPage.tsx`. Backend service in `app/services/packet_service.py`, routes in `app/routes/packets.py`, frontend API in `lib/api/packets.ts`.
