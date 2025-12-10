@@ -119,7 +119,6 @@ export function PacketsPage() {
                   <div className="flex gap-2 pt-2">
                     <Button
                       variant="outline"
-                      size="sm"
                       className="flex-1"
                       onClick={async () => {
                         if (!session) return;
@@ -136,7 +135,6 @@ export function PacketsPage() {
                     </Button>
                     <Button
                       variant="outline"
-                      size="sm"
                       onClick={() => handleDelete(packet.id)}
                       disabled={deletingPacketId === packet.id}
                       className="flex-1 text-red-600 hover:text-red-700"
