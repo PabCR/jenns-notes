@@ -12,6 +12,10 @@ interface MetadataActionArgs {
   setError(message: string): void;
   hydrateMetadata(metadata: { tags?: string[]; description?: string; topic?: string }): void;
   handleUpdatePdfResource(index: number, updates: Partial<PDFResource>): void;
+  hydrateMetadataForResource(
+    id: string,
+    metadata: { tags?: string[]; description?: string; topic?: string },
+  ): void;
 }
 
 /**
@@ -24,6 +28,7 @@ export function createMetadataActions({
   setError,
   hydrateMetadata,
   handleUpdatePdfResource,
+  hydrateMetadataForResource,
 }: MetadataActionArgs) {
   const handleExtractMetadata = async () => {
     if (!session) return;
@@ -114,10 +119,79 @@ export function createMetadataActions({
     );
   };
 
+  /** Extract metadata for a specific pending resource by id. */
+  const handleExtractMetadataForId = async (id: string) => {
+    const resource = state.pendingResources.find((r) => r.id === id);
+    if (!session || !resource) {
+      setError('You must be logged in and resource must exist');
+      return;
+    }
+
+    setState({
+      extractingIds: Array.from(new Set([...state.extractingIds, id])),
+      error: '',
+    });
+
+    try {
+      let metadata;
+      if (resource.type === 'pdf' && resource.file) {
+        metadata = await generateTags(session, 'pdf', resource.file);
+      } else if (resource.type === 'link' && resource.linkUrl) {
+        metadata = await generateTags(session, 'link', resource.linkUrl);
+      } else if (resource.type === 'note' && resource.content) {
+        metadata = await generateTags(session, 'note', resource.content);
+      } else {
+        setError('Invalid resource type or missing content');
+        return;
+      }
+      hydrateMetadataForResource(id, metadata);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to extract metadata');
+    } finally {
+      setState({
+        extractingIds: state.extractingIds.filter((i) => i !== id),
+      });
+    }
+  };
+
+  /** Extract metadata for all pending resources (mixed types). */
+  const handleExtractAllMetadata = async () => {
+    if (!session || state.pendingResources.length === 0) return;
+
+    const ids = state.pendingResources.map((r) => r.id);
+    setState({ extractingIds: ids, error: '' });
+
+    await Promise.all(
+      state.pendingResources.map(async (resource) => {
+        try {
+          let metadata;
+          if (resource.type === 'pdf' && resource.file) {
+            metadata = await generateTags(session, 'pdf', resource.file);
+          } else if (resource.type === 'link' && resource.linkUrl) {
+            metadata = await generateTags(session, 'link', resource.linkUrl);
+          } else if (resource.type === 'note' && resource.content) {
+            metadata = await generateTags(session, 'note', resource.content);
+          } else {
+            return; // skip invalid resources
+          }
+          hydrateMetadataForResource(resource.id, metadata);
+        } catch {
+          // ignore individual failures to allow batch completion
+        } finally {
+          setState((prev) => ({
+            extractingIds: prev.extractingIds.filter((i) => i !== resource.id),
+          }));
+        }
+      }),
+    );
+  };
+
   return {
     handleExtractMetadata,
     handleExtractPdfMetadata,
     handleExtractPdfMetadataForIndex,
     handleExtractAllPdfMetadata,
+    handleExtractMetadataForId,
+    handleExtractAllMetadata,
   };
 }

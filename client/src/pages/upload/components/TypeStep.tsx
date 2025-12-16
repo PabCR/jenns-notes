@@ -13,6 +13,7 @@ interface TypeStepProps {
   content: string;
   linkUrl: string;
   pendingPdfs: PendingPDF[];
+  pendingResourcesCount: number;
   loading: boolean;
   error: string;
   fileInputRef: RefObject<HTMLInputElement | null>;
@@ -23,6 +24,7 @@ interface TypeStepProps {
   onFileSelect(files: File[]): void;
   onRemovePendingPdf(index: number): void;
   onAddPdfs(): void;
+  onReviewClick(): void;
 }
 
 /**
@@ -32,6 +34,7 @@ export function TypeStep({
   content,
   linkUrl,
   pendingPdfs,
+  pendingResourcesCount,
   loading,
   error,
   fileInputRef,
@@ -42,9 +45,10 @@ export function TypeStep({
   onFileSelect,
   onRemovePendingPdf,
   onAddPdfs,
+  onReviewClick,
 }: TypeStepProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 relative">
       <Card>
         <CardHeader>
           <CardTitle>Type a Note</CardTitle>
@@ -151,11 +155,23 @@ export function TypeStep({
             disabled={loading || pendingPdfs.length === 0 || pendingPdfs.some((p) => p.error)}
             className="w-full"
           >
-            Review PDFs
+            Add PDFs
           </Button>
           {error && pendingPdfs.length > 0 && <p className="text-sm text-red-600">{error}</p>}
         </CardContent>
       </Card>
+
+      {/* Floating CTA button */}
+      {pendingResourcesCount > 0 && (
+        <Button
+          onClick={onReviewClick}
+          disabled={loading}
+          className="fixed bottom-6 right-6 z-50 shadow-lg h-14 px-6"
+          size="lg"
+        >
+          Review ({pendingResourcesCount})
+        </Button>
+      )}
     </div>
   );
 }

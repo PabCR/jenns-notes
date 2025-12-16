@@ -5,8 +5,7 @@ import { useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { TypeStep } from './components/TypeStep';
-import { SingleReviewStep } from './components/SingleReviewStep';
-import { BatchReviewStep } from './components/BatchReviewStep';
+import { MultiReviewStep } from './components/MultiReviewStep';
 import { ConfirmStep } from './components/ConfirmStep';
 import { useUploadFlow } from './useUploadFlow';
 
@@ -48,6 +47,7 @@ export function UploadPage() {
             content={state.content}
             linkUrl={state.linkUrl}
             pendingPdfs={state.pendingPdfs}
+            pendingResourcesCount={state.pendingResources.length}
             loading={state.loading}
             error={state.error}
             fileInputRef={fileInputRef}
@@ -60,62 +60,39 @@ export function UploadPage() {
             onFileSelect={handleFileSelect}
             onRemovePendingPdf={upload.handleRemovePendingPdf}
             onAddPdfs={upload.handleAddPdfs}
+            onReviewClick={() => upload.setState({ step: 'review' })}
           />
         )}
 
-        {state.step === 'review' &&
-          (state.pdfResources.length > 0 ? (
-            <BatchReviewStep
-              resources={state.pdfResources}
-              tagInputs={state.pdfTagInputs}
-              extractingIndexes={state.extractingPdfIndexes}
-              loading={state.loading}
-              error={state.error}
-              onBack={handleBackToType}
-              onSubmit={upload.handleBatchSubmit}
-              onExtractAll={upload.handleExtractAllPdfMetadata}
-              onExtractForIndex={upload.handleExtractPdfMetadataForIndex}
-              onUpdateResource={upload.handleUpdatePdfResource}
-              onRemoveResource={upload.handleRemovePdfResource}
-              onAddTag={upload.handleAddTagToPdf}
-              onRemoveTag={upload.handleRemoveTagFromPdf}
-              onTagInputChange={(index, value) =>
-                upload.setState({
-                  pdfTagInputs: {
-                    ...state.pdfTagInputs,
-                    [index]: value,
-                  },
-                })
-              }
-            />
-          ) : (
-            <SingleReviewStep
-              resourceType={state.resourceType}
-              linkUrl={state.linkUrl}
-              singlePdfFile={state.singlePdfFile}
-              title={state.title}
-              description={state.description}
-              tags={state.tags}
-              tagInput={state.tagInput}
-              loading={state.loading}
-              extracting={state.extracting}
-              error={state.error}
-              onTitleChange={(value) => upload.setState({ title: value })}
-              onDescriptionChange={(value) => upload.setState({ description: value })}
-              onTagInputChange={(value) => upload.setState({ tagInput: value })}
-              onAddTag={upload.handleAddTag}
-              onRemoveTag={upload.handleRemoveTag}
-              onExtractMetadata={upload.handleExtractMetadata}
-              onExtractPdfMetadata={upload.handleExtractPdfMetadata}
-              onBack={handleBackToType}
-              onReset={handleReset}
-              onSubmit={upload.handleSubmit}
-            />
-          ))}
+        {state.step === 'review' && (
+          <MultiReviewStep
+            resources={state.pendingResources}
+            tagInputs={state.pendingTagInputs}
+            extractingIds={state.extractingIds}
+            loading={state.loading}
+            error={state.error}
+            onBack={handleBackToType}
+            onSubmit={upload.handleSubmitAll}
+            onExtractAll={upload.handleExtractAllMetadata}
+            onExtractForId={upload.handleExtractMetadataForId}
+            onUpdateResource={upload.handleUpdateResource}
+            onRemoveResource={upload.handleRemoveResource}
+            onAddTag={upload.handleAddTagToResource}
+            onRemoveTag={upload.handleRemoveTagFromResource}
+            onTagInputChange={(id, value) =>
+              upload.setState({
+                pendingTagInputs: {
+                  ...state.pendingTagInputs,
+                  [id]: value,
+                },
+              })
+            }
+          />
+        )}
 
         {state.step === 'confirm' && (
           <ConfirmStep
-            resourceCount={state.pdfResources.length || 1}
+            resourceCount={state.confirmedResourceCount || 1}
             onUploadMore={handleReset}
             onViewResources={() => navigate('/')}
           />

@@ -13,6 +13,7 @@ const createInitialState = (): UploadState => ({
   loading: false,
   extracting: false,
   extractingPdfIndexes: [],
+  extractingIds: [],
   error: '',
   resourceType: 'note',
   content: '',
@@ -24,6 +25,9 @@ const createInitialState = (): UploadState => ({
   tagInput: '',
   pdfResources: [],
   pdfTagInputs: {},
+  pendingResources: [],
+  pendingTagInputs: {},
+  confirmedResourceCount: 0,
   singlePdfFile: null,
 });
 

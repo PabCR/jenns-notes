@@ -128,6 +128,11 @@ async def update_packet(
 
 
 async def delete_packet(packet: Packet, db: AsyncSession) -> None:
-    """Remove a packet (cascade deletes packet_resources)."""
+    """Remove a packet and its packet_resources."""
+    # Delete packet_resources first
+    await db.execute(
+        delete(PacketResource).where(PacketResource.packet_id == packet.id)
+    )
+    # Then delete the packet
     await db.execute(delete(Packet).where(Packet.id == packet.id))
     await db.commit()

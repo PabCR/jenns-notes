@@ -34,7 +34,8 @@ def build_oncology_prompt(content: str) -> str:
     Returns:
         Formatted prompt string
     """
-    prompt = f"""You are an expert oncology nurse assistant helping to categorize and tag educational resources for cancer patients and their caregivers.
+    prompt = f"""
+You are an expert oncology nurse assistant helping to categorize and tag educational resources for cancer patients and their caregivers.
 
 Analyze the following resource content and extract structured metadata:
 
@@ -48,7 +49,7 @@ Please provide:
    - Topics: nutrition, pain management, emotional support, caregiving, etc.
    - Patient education: medication instructions, symptom management, etc.
 
-2. **Description** (1-2 sentences): A patient-friendly summary of what this resource covers. Use clear, non-technical language when possible.
+2. **Description** (1-2 sentences): A patient-friendly summary of what this resource covers. Use clear, non-technical language when possible. Use grade school level language and avoid using complex words, and describe as if the nurse is talking to a patient.
 
 3. **Condition** (if applicable): The specific cancer type or medical condition this resource addresses (e.g., "breast cancer", "lung cancer", "general oncology").
 
@@ -57,6 +58,8 @@ Please provide:
 5. **Topic**: The primary topic or category (e.g., "treatment options", "side effect management", "nutrition", "emotional support", "medication guide").
 
 Focus on oncology nursing context and ensure tags are relevant and useful for organizing educational resources for cancer patients and their support network.
+
+Use grade school level language and avoid using complex words. 
 """
     return prompt
 

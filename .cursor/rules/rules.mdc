@@ -1,5 +1,5 @@
 ---
-alwaysApply: false
+alwaysApply: true
 ---
 {
   "rules": [
@@ -17,17 +17,6 @@ alwaysApply: false
             "Prefer explicit, documented patterns from the frameworks and libraries listed in tech-stack.md over novel abstractions or assumptions.",
             "If documentation contradicts existing code, trust the documentation and update code, the implementation plan, and associated tests accordingly."
         ]
-    },
-    {
-      "description": "Enforce test-first implementation planning",
-      "matches": ["*"],
-      "autoApply": true,
-      "priority": 90,
-      "instructions": [
-        "When asked to implement or change functionality, first derive or update an explicit implementation plan before touching production code.",
-        "Within that implementation plan, define the testing strategy and concrete tests BEFORE any implementation steps. Specify test files, test cases, and expected behaviors.",
-        "When executing the plan, build or update the testing suite first, then implement only the code needed to satisfy those tests."
-      ]
     },
     {
       "description": "Maintain strict minimal-code discipline",
