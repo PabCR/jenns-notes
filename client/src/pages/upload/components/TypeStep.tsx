@@ -15,7 +15,7 @@ interface TypeStepProps {
   pendingPdfs: PendingPDF[];
   loading: boolean;
   error: string;
-  fileInputRef: RefObject<HTMLInputElement>;
+  fileInputRef: RefObject<HTMLInputElement | null>;
   onContentChange(value: string): void;
   onLinkChange(value: string): void;
   onAddNote(): void;

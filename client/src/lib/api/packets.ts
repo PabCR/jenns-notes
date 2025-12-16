@@ -3,7 +3,7 @@
  */
 import type { ApiSession } from './client';
 import { apiRequest } from './client';
-import type { Packet, Resource } from '../../../../shared/types';
+import type { Packet } from '../../../../shared/types';
 
 /**
  * Create a new packet for the authenticated user.

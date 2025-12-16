@@ -3,15 +3,14 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { BottomNavigation } from '@/components/BottomNavigation';
-import { Login } from '@/pages/Login';
-import { Signup } from '@/pages/Signup';
-import { Home } from '@/pages/Home';
-import { Upload } from '@/pages/Upload';
+import { Login } from '@/pages/auth/Login';
+import { Signup } from '@/pages/auth/Signup';
+import { HomePage } from '@/pages/home/HomePage';
+import { UploadPage } from '@/pages/upload/UploadPage';
 import { PacketsPage } from '@/pages/packets/PacketsPage';
-import { Test } from '@/pages/Test';
-import { AuthCallback } from '@/pages/AuthCallback';
-import { ResetPassword } from '@/pages/ResetPassword';
-import { ForgotPassword } from '@/pages/ForgotPassword';
+import { AuthCallback } from '@/pages/auth/AuthCallback';
+import { ResetPassword } from '@/pages/auth/ResetPassword';
+import { ForgotPassword } from '@/pages/auth/ForgotPassword';
 
 function App() {
   return (
@@ -19,7 +18,6 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <Routes>
-            <Route path="/test" element={<Test />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -29,7 +27,7 @@ function App() {
               path="/"
               element={
                 <ProtectedRoute>
-                  <Home />
+                  <HomePage />
                   <BottomNavigation />
                 </ProtectedRoute>
               }
@@ -38,7 +36,7 @@ function App() {
               path="/upload"
               element={
                 <ProtectedRoute>
-                  <Upload />
+                  <UploadPage />
                   <BottomNavigation />
                 </ProtectedRoute>
               }

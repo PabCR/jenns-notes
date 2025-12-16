@@ -64,7 +64,7 @@ export function SingleReviewStep({
   };
 
   return (
-    <Card>
+    <Card className="max-h-[calc(100vh-12rem)] overflow-y-auto">
       <CardHeader>
         <CardTitle>Review Resource</CardTitle>
       </CardHeader>

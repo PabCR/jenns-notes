@@ -35,11 +35,6 @@ export function PacketSheet({
   // Get selected resources for display
   const selectedResources = resources.filter((r) => selectedResourceIds.has(r.id));
 
-  const handleRemoveResource = (resourceId: string) => {
-    // This will be handled by parent component
-    // For now, we'll just show the resources that are selected
-  };
-
   const handleSubmit = async () => {
     if (!name.trim()) {
       setError('Packet name is required');

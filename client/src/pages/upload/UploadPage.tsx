@@ -16,7 +16,7 @@ import { useUploadFlow } from './useUploadFlow';
 export function UploadPage() {
   const navigate = useNavigate();
   const { session } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const upload = useUploadFlow(session);
   const { state } = upload;
 
@@ -39,8 +39,8 @@ export function UploadPage() {
   const handleBackToType = () => upload.setState({ step: 'type' });
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8 pb-24">
-      <div className="max-w-2xl mx-auto">
+    <div className="h-screen overflow-y-auto bg-gray-50 p-4 md:p-8 pb-64">
+      <div className="max-w-2xl mx-auto pb-32">
         <h1 className="text-3xl font-bold mb-8">Upload Resource</h1>
 
         {state.step === 'type' && (
