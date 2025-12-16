@@ -11,6 +11,11 @@ A web application for oncology nurses to manage and share patient educational re
 ├── shared/          # Shared TypeScript types
 ```
 
+## Documentation
+
+- Detailed references live under `docs/` (file organization, patterns, PRD, tech stack, implementation plan).
+- Historical/stale notes are archived in `docs/archive/`.
+
 ## Getting Started
 
 ### Prerequisites
@@ -64,7 +69,7 @@ cd client && cp .env.example .env
 
 ## Development
 
-Follow the vertical implementation plan in `implementation-plan.md` to build features incrementally.
+Follow the vertical implementation plan in `docs/implementation-plan.md` to build features incrementally. Automated test suites have been removed per project requirements; rely on build + lint for quick checks.
 
 ## Tech Stack
 
@@ -78,4 +83,3 @@ Follow the vertical implementation plan in `implementation-plan.md` to build fea
 ## License
 
 [Your License Here]
-

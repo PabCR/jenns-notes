@@ -4,7 +4,14 @@ import { cn } from '@/lib/utils';
 export function BottomNavigation() {
   const location = useLocation();
 
-  const navItems = [
+  type NavItem = {
+    path: string;
+    label: string;
+    icon: string;
+    disabled?: boolean;
+  };
+
+  const navItems: NavItem[] = [
     { path: '/', label: 'Home', icon: '🏠' },
     { path: '/upload', label: 'Upload', icon: '📤' },
     { path: '/packets', label: 'Packets', icon: '📦' },
@@ -16,7 +23,7 @@ export function BottomNavigation() {
         <div className="flex justify-around items-center h-16">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path;
-            const isDisabled = item.disabled;
+            const isDisabled = Boolean(item.disabled);
 
             if (isDisabled) {
               return (
@@ -51,4 +58,3 @@ export function BottomNavigation() {
     </nav>
   );
 }
-

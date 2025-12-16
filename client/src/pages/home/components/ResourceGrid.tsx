@@ -98,12 +98,11 @@ export function ResourceGrid({
                 {resource.type === 'link' && (
                   <Button
                     variant="outline"
-                    size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
                       onOpenLink(resource.content);
                     }}
-                    className="flex-1"
+                    className="flex-1 h-9"
                   >
                     Visit Link
                   </Button>
@@ -111,36 +110,33 @@ export function ResourceGrid({
                 {resource.type === 'pdf' && (
                   <Button
                     variant="outline"
-                    size="sm"
                     onClick={(e) => {
                       e.stopPropagation();
                       onOpenPdf(resource.content);
                     }}
-                    className="flex-1"
+                    className="flex-1 h-9"
                   >
                     View
                   </Button>
                 )}
                 <Button
                   variant="outline"
-                  size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
                     onEdit(resource);
                   }}
-                  className="flex-1"
+                  className="flex-1 h-9"
                 >
                   Edit
                 </Button>
                 <Button
                   variant="outline"
-                  size="sm"
                   onClick={(e) => {
                     e.stopPropagation();
                     onDelete(resource.id);
                   }}
                   disabled={deletingResourceId === resource.id}
-                  className="flex-1 text-red-600 hover:text-red-700"
+                  className="flex-1 h-9 text-red-600 hover:text-red-700"
                 >
                   Delete
                 </Button>

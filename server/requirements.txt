@@ -1,30 +1,25 @@
-# Core frameworks - keep pinned for stability (breaking changes possible)
+# Core frameworks
 fastapi==0.124.0
 pydantic==2.12.5
 sqlalchemy==2.0.36
 
-# Database - keep pinned for consistency
+# Database
 alembic==1.17.2
 asyncpg==0.30.0
 psycopg2-binary==2.9.9
 greenlet==3.1.0
 
-# Testing - keep pinned for reproducibility
-pytest==8.3.3
-pytest-asyncio==0.24.0
-aiosqlite==0.20.0
-
-# Allow patch/minor updates, block major (safe updates)
+# Server
 uvicorn[standard]==0.32.0
 pydantic-settings==2.5.2
 
-# Security-critical & actively developed - use minimum versions (latest features & security)
+# External services
 supabase==2.25.0
 google-genai>=1.53.0
 httpx>=0.28.1
 beautifulsoup4>=4.12.3
 
-# Stable utilities - use minimum versions (low risk)
+# Utilities
 python-dotenv>=1.0.1
 python-multipart>=0.0.12
 nanoid>=2.0.0

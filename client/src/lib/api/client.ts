@@ -21,12 +21,12 @@ export function getAuthToken(session: ApiSession): string | null {
 export function buildAuthHeaders(
   session: ApiSession,
   overrides: HeadersInit = {},
-): HeadersInit {
-  const headers: HeadersInit = { ...overrides };
+): Headers {
+  const headers = new Headers(overrides);
   const token = getAuthToken(session);
 
   if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
   return headers;
@@ -40,10 +40,8 @@ export async function apiRequest<T>(
   session: ApiSession,
   options: RequestInit = {},
 ): Promise<T> {
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    ...options.headers,
-  };
+  const headers = new Headers(options.headers || {});
+  headers.set('Content-Type', 'application/json');
 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...options,
