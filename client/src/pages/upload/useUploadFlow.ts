@@ -29,6 +29,7 @@ export function useUploadFlow(session: ApiSession) {
     setError,
     hydrateMetadata: resourceActions.hydrateMetadata,
     handleUpdatePdfResource: resourceActions.handleUpdatePdfResource,
+    hydrateMetadataForResource: resourceActions.hydrateMetadataForResource,
   });
   const submitActions = createSubmitActions({ state, setState, session, setError });
 

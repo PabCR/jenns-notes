@@ -43,7 +43,7 @@ export function HomePage() {
   const showNoResults = !state.loading && state.resources.length === 0 && isSearchActive;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8 pb-24">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8 pb-32">
       <div className="max-w-7xl mx-auto">
         <FilterBar
           searchQuery={state.searchQuery}

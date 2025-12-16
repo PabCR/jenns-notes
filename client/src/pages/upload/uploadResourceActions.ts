@@ -1,7 +1,7 @@
 /**
  * Resource-level mutations shared across upload steps.
  */
-import type { PDFResource, UploadState } from './types';
+import type { PendingResource, PDFResource, UploadState } from './types';
 
 interface ResourceActionsArgs {
   state: UploadState;
@@ -12,7 +12,7 @@ interface ResourceActionsArgs {
  * Build reusable resource/tag handlers for the Upload flow.
  */
 export function createResourceActions({ state, setState }: ResourceActionsArgs) {
-  /** Update a single PDF resource entry in the batch flow. */
+  /** Update a single PDF resource entry in the batch flow. (deprecated, kept for backward compatibility) */
   const handleUpdatePdfResource = (index: number, updates: Partial<PDFResource>) => {
     setState((prev) => ({
       pdfResources: prev.pdfResources.map((resource, i) =>
@@ -24,6 +24,25 @@ export function createResourceActions({ state, setState }: ResourceActionsArgs) 
   const handleRemovePdfResource = (index: number) => {
     setState({
       pdfResources: state.pdfResources.filter((_, i) => i !== index),
+    });
+  };
+
+  /** Update a pending resource by id. */
+  const handleUpdateResource = (id: string, updates: Partial<PendingResource>) => {
+    setState((prev) => ({
+      pendingResources: prev.pendingResources.map((resource) =>
+        resource.id === id ? { ...resource, ...updates } : resource,
+      ),
+    }));
+  };
+
+  /** Remove a pending resource by id. */
+  const handleRemoveResource = (id: string) => {
+    setState({
+      pendingResources: state.pendingResources.filter((resource) => resource.id !== id),
+      pendingTagInputs: Object.fromEntries(
+        Object.entries(state.pendingTagInputs).filter(([key]) => key !== id),
+      ),
     });
   };
 
@@ -66,6 +85,32 @@ export function createResourceActions({ state, setState }: ResourceActionsArgs) 
     });
   };
 
+  /** Add a tag to a pending resource by id. */
+  const handleAddTagToResource = (id: string, tag: string) => {
+    if (!tag.trim()) return;
+    const trimmed = tag.trim();
+    const resource = state.pendingResources.find((r) => r.id === id);
+    if (!resource || resource.tags.includes(trimmed)) return;
+
+    handleUpdateResource(id, { tags: [...resource.tags, trimmed] });
+    setState({
+      pendingTagInputs: {
+        ...state.pendingTagInputs,
+        [id]: '',
+      },
+    });
+  };
+
+  /** Remove a tag from a pending resource by id. */
+  const handleRemoveTagFromResource = (id: string, tagToRemove: string) => {
+    const resource = state.pendingResources.find((r) => r.id === id);
+    if (!resource) return;
+
+    handleUpdateResource(id, {
+      tags: resource.tags.filter((tag) => tag !== tagToRemove),
+    });
+  };
+
   const hydrateMetadata = (metadata: {
     tags?: string[];
     description?: string;
@@ -86,6 +131,33 @@ export function createResourceActions({ state, setState }: ResourceActionsArgs) 
     }
   };
 
+  /** Hydrate metadata for a specific pending resource by id. */
+  const hydrateMetadataForResource = (
+    id: string,
+    metadata: {
+      tags?: string[];
+      description?: string;
+      topic?: string;
+    },
+  ) => {
+    const resource = state.pendingResources.find((r) => r.id === id);
+    if (!resource) return;
+
+    const updates: Partial<PendingResource> = {};
+    if (metadata.tags?.length) {
+      updates.tags = metadata.tags;
+    }
+    if (metadata.description && !resource.description.trim()) {
+      updates.description = metadata.description;
+    }
+    if (metadata.topic && !resource.title.trim()) {
+      updates.title = metadata.topic;
+    }
+    if (Object.keys(updates).length > 0) {
+      handleUpdateResource(id, updates);
+    }
+  };
+
   return {
     handleUpdatePdfResource,
     handleRemovePdfResource,
@@ -94,5 +166,10 @@ export function createResourceActions({ state, setState }: ResourceActionsArgs) 
     handleAddTagToPdf,
     handleRemoveTagFromPdf,
     hydrateMetadata,
+    handleUpdateResource,
+    handleRemoveResource,
+    handleAddTagToResource,
+    handleRemoveTagFromResource,
+    hydrateMetadataForResource,
   };
 }

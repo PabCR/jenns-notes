@@ -2,8 +2,13 @@
  * Actions for type selection, file intake, and pending PDF preparation.
  */
 import type { ApiSession } from '@/lib/api';
-import type { PDFResource, PendingPDF, UploadState } from './types';
+import type { PendingPDF, PendingResource, UploadState } from './types';
 import { isValidUrl, normalizeUrl } from './uploadState';
+
+/** Generate a unique ID for a pending resource */
+const generateResourceId = (): string => {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+};
 
 interface TypeActionArgs {
   state: UploadState;
@@ -31,11 +36,19 @@ export function createTypeActions({
     }
 
     const title = state.content.split('\n')[0].trim() || 'Untitled Note';
+    const newResource: PendingResource = {
+      id: generateResourceId(),
+      type: 'note',
+      title,
+      description: '',
+      tags: [],
+      content: state.content.trim(),
+    };
+
     setState({
       error: '',
-      resourceType: 'note',
-      title,
-      step: 'review',
+      pendingResources: [...state.pendingResources, newResource],
+      content: '', // Clear input
     });
   };
 
@@ -53,13 +66,19 @@ export function createTypeActions({
     }
 
     const hostname = new URL(candidate).hostname.replace('www.', '') || 'Untitled Link';
+    const newResource: PendingResource = {
+      id: generateResourceId(),
+      type: 'link',
+      title: hostname,
+      description: '',
+      tags: [],
+      linkUrl: candidate,
+    };
+
     setState({
       error: '',
-      resourceType: 'link',
-      linkUrl: candidate,
-      content: candidate,
-      title: hostname,
-      step: 'review',
+      pendingResources: [...state.pendingResources, newResource],
+      linkUrl: '', // Clear input
     });
   };
 
@@ -114,39 +133,24 @@ export function createTypeActions({
       return;
     }
 
-    const resources: PDFResource[] = state.pendingPdfs.map((pdf) => {
+    const newResources: PendingResource[] = state.pendingPdfs.map((pdf) => {
       const filename = pdf.file.name.replace(/\.pdf$/i, '') || 'Untitled PDF';
       return {
-        fileName: pdf.file.name,
-        file: pdf.file,
+        id: generateResourceId(),
+        type: 'pdf',
         title: filename,
         description: '',
         tags: [],
+        file: pdf.file,
+        fileName: pdf.file.name,
       };
     });
 
-    if (resources.length === 1) {
-      const resource = resources[0];
-      setState({
-        resourceType: 'pdf',
-        title: resource.title,
-        description: resource.description,
-        tags: resource.tags,
-        singlePdfFile: resource.file,
-        pendingPdfs: [],
-        pdfResources: [],
-        step: 'review',
-        error: '',
-      });
-    } else {
-      setState({
-        resourceType: 'pdf',
-        pdfResources: resources,
-        pendingPdfs: [],
-        step: 'review',
-        error: '',
-      });
-    }
+    setState({
+      error: '',
+      pendingResources: [...state.pendingResources, ...newResources],
+      pendingPdfs: [], // Clear input
+    });
   };
 
   return {
