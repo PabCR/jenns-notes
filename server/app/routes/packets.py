@@ -42,7 +42,7 @@ async def create_packet_endpoint(
     # Build response with resources
     response = PacketResponse.model_validate(packet)
     response.resources = [ResourceResponse.model_validate(r) for r in packet.resources]
-    response.resource_count = len(packet.resources)
+    response.resource_count = len(packet.resource_ids or [])
     return response
 
 
@@ -59,9 +59,8 @@ async def list_packets_endpoint(
     responses = []
     for packet in packets:
         response = PacketResponse.model_validate(packet)
-        response.resources = [ResourceResponse.model_validate(r) for r in packet.resources]
-        # Use resource_count if available, otherwise len(resources)
-        response.resource_count = getattr(packet, 'resource_count', len(packet.resources))
+        response.resources = []
+        response.resource_count = getattr(packet, 'resource_count', len(packet.resource_ids or []))
         responses.append(response)
     
     return responses
@@ -85,7 +84,7 @@ async def get_packet_endpoint(
     # Build response with resources
     response = PacketResponse.model_validate(packet)
     response.resources = [ResourceResponse.model_validate(r) for r in packet.resources]
-    response.resource_count = len(packet.resources)
+    response.resource_count = len(packet.resource_ids or [])
     return response
 
 
@@ -110,7 +109,7 @@ async def update_packet_endpoint(
     # Build response with resources
     response = PacketResponse.model_validate(updated_packet)
     response.resources = [ResourceResponse.model_validate(r) for r in updated_packet.resources]
-    response.resource_count = len(updated_packet.resources)
+    response.resource_count = len(updated_packet.resource_ids or [])
     return response
 
 

@@ -64,3 +64,25 @@ export async function fetchPDFBlob(
   const blob = await response.blob();
   return URL.createObjectURL(blob);
 }
+
+/**
+ * Fetch a signed URL for a PDF in a public packet (no auth required).
+ */
+export async function getPublicSignedUrl(
+  shareLink: string,
+  resourceId: string,
+): Promise<string> {
+  const response = await fetch(
+    `${API_BASE_URL}/objects/public/packets/${shareLink}/resources/${resourceId}/signed-url`,
+  );
+
+  if (!response.ok) {
+    const errorData = await response
+      .json()
+      .catch(() => ({ detail: response.statusText }));
+    throw new Error(errorData.detail || 'Failed to fetch signed URL');
+  }
+
+  const data = await response.json();
+  return data.signedUrl;
+}
