@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { updatePacket, getResources } from '@/lib/api';
-import type { Packet, Resource } from '../../../../../shared/types';
+import type { Packet, Resource } from '@/lib/types';
 import type { ApiSession } from '@/lib/api';
 
 interface EditPacketDialogProps {

@@ -12,7 +12,7 @@ import { listPackets, deletePacket } from '@/lib/api';
 import { EditPacketDialog } from './components/EditPacketDialog';
 import { getPacket } from '@/lib/api';
 import { copyToClipboard } from '@/lib/utils';
-import type { Packet } from '../../../../shared/types';
+import type { Packet } from '@/lib/types';
 import { Check, Copy, ExternalLink } from 'lucide-react';
 import QRCode from 'react-qr-code';
 

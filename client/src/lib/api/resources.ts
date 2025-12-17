@@ -3,7 +3,7 @@
  */
 import type { ApiSession } from './client';
 import { apiRequest } from './client';
-import type { Resource } from '../../../../shared/types';
+import type { Resource } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 
 function mapResource(row: any): Resource {

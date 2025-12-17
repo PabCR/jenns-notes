@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { PDFViewer } from '@/components/PDFViewer';
 import { getPublicPacket, getResourcesForPacket, getPublicSignedUrl } from '@/lib/api';
-import type { Packet, Resource } from '../../../../shared/types';
+import type { Packet, Resource } from '@/lib/types';
 import { FileText, Link as LinkIcon, StickyNote } from 'lucide-react';
 
 const ResourceIcon = ({ type }: { type: Resource['type'] }) => {

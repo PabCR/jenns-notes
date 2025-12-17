@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { createPacket } from '@/lib/api';
 import { copyToClipboard } from '@/lib/utils';
-import type { Resource } from '../../../../../shared/types';
+import type { Resource } from '@/lib/types';
 import type { ApiSession } from '@/lib/api';
 import { Check, Copy } from 'lucide-react';
 import QRCode from 'react-qr-code';
