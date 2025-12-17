@@ -73,7 +73,7 @@ export async function getPublicSignedUrl(
   resourceId: string,
 ): Promise<string> {
   const response = await fetch(
-    `${API_BASE_URL}/objects/public/packets/${shareLink}/resources/${resourceId}/signed-url`,
+    `${API_BASE_URL}/api/objects/public/packets/${shareLink}/resources/${resourceId}/signed-url`,
   );
 
   if (!response.ok) {

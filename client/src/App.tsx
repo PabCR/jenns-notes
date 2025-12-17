@@ -8,6 +8,7 @@ import { Signup } from '@/pages/auth/Signup';
 import { HomePage } from '@/pages/home/HomePage';
 import { UploadPage } from '@/pages/upload/UploadPage';
 import { PacketsPage } from '@/pages/packets/PacketsPage';
+import { SharedPacketPage } from '@/pages/shared/SharedPacketPage';
 import { AuthCallback } from '@/pages/auth/AuthCallback';
 import { ResetPassword } from '@/pages/auth/ResetPassword';
 import { ForgotPassword } from '@/pages/auth/ForgotPassword';
@@ -50,6 +51,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
+            <Route path="/shared/:shareLink" element={<SharedPacketPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>
