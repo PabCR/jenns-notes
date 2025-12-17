@@ -1,7 +1,6 @@
 """Packet model for storing user resource collections."""
-from sqlalchemy import Column, String, Text, Integer, CheckConstraint, Index, ForeignKey, PrimaryKeyConstraint
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, String, Text, CheckConstraint, Index
+from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.sql import func
 from sqlalchemy.types import TIMESTAMP
 from app.db import Base
@@ -38,6 +37,11 @@ class Packet(Base):
         unique=True,
         index=True
     )
+    resource_ids = Column(
+        ARRAY(UUID(as_uuid=True)),
+        nullable=False,
+        server_default="{}"
+    )
     created_at = Column(
         TIMESTAMP(timezone=True),
         nullable=False,
@@ -51,47 +55,10 @@ class Packet(Base):
         onupdate=func.now()
     )
     
-    # Relationships
-    resources = relationship(
-        "Resource",
-        secondary="packet_resources",
-        lazy="selectin"
-    )
-    
     # Table constraints
     __table_args__ = (
         CheckConstraint("char_length(name) >= 1", name="check_name_length"),
         Index("idx_packets_user_id", "user_id"),
         Index("idx_packets_share_link", "share_link"),
-    )
-
-
-class PacketResource(Base):
-    """Join table for packet-resource relationships."""
-    
-    __tablename__ = "packet_resources"
-    
-    packet_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("packets.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
-    )
-    resource_id = Column(
-        UUID(as_uuid=True),
-        ForeignKey("resources.id", ondelete="CASCADE"),
-        nullable=False,
-        index=True
-    )
-    position = Column(
-        Integer,
-        nullable=False,
-        server_default="0"
-    )
-    
-    # Composite primary key
-    __table_args__ = (
-        PrimaryKeyConstraint("packet_id", "resource_id"),
-        Index("idx_packet_resources_packet_id", "packet_id"),
-        Index("idx_packet_resources_resource_id", "resource_id"),
+        Index("idx_packets_resource_ids_gin", "resource_ids", postgresql_using="gin"),
     )

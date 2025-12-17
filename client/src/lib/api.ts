@@ -14,6 +14,7 @@ export {
   requestPresignedUrl,
   uploadToPresignedUrl,
   fetchPDFBlob,
+  getPublicSignedUrl,
 } from './api/objects';
 export { generateTags } from './api/metadata';
 export {
@@ -22,4 +23,6 @@ export {
   listPackets,
   updatePacket,
   deletePacket,
+  getPublicPacket,
+  getResourcesForPacket,
 } from './api/packets';

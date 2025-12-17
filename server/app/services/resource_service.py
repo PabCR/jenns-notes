@@ -8,6 +8,7 @@ from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.resource import Resource
+from app.models.packet import Packet
 from app.schemas.resource import ResourceCreate, ResourceUpdate
 from app.utils.supabase import delete_file_from_storage
 
@@ -87,6 +88,18 @@ async def apply_resource_updates(
 
 async def delete_resource_entry(resource: Resource, db: AsyncSession) -> None:
     """Remove a resource and its backing PDF when applicable."""
+    # Prevent deleting resources that are still referenced in packets
+    in_packet = await db.scalar(
+        select(func.count())
+        .select_from(Packet)
+        .where(Packet.resource_ids.contains([resource.id]))
+    )
+    if in_packet and in_packet > 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Resource is referenced by a packet and cannot be deleted",
+        )
+
     if resource.type == "pdf":
         file_path = resource.content
         if (

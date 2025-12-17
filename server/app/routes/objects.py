@@ -8,6 +8,12 @@ from io import BytesIO
 
 from app.utils.auth import get_current_user
 from app.utils.supabase import get_supabase_storage_client, get_storage_bucket_name
+from app.db import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from uuid import UUID
+from app.models.packet import Packet
+from app.models.resource import Resource
 
 router = APIRouter(tags=["objects"])
 
@@ -29,6 +35,11 @@ class PresignedUrlResponse(BaseModel):
     """Response schema for presigned URL."""
     uploadUrl: str
     filePath: str
+
+
+class SignedUrlResponse(BaseModel):
+    """Response schema for signed download URL."""
+    signedUrl: str
 
 
 @router.post("/upload", response_model=PresignedUrlResponse, status_code=status.HTTP_200_OK)
@@ -70,6 +81,65 @@ async def create_presigned_url(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to generate presigned URL: {str(e)}"
+        )
+
+
+@router.get(
+    "/public/packets/{share_link}/resources/{resource_id}/signed-url",
+    response_model=SignedUrlResponse,
+    status_code=status.HTTP_200_OK,
+)
+async def create_public_signed_url(
+    share_link: str,
+    resource_id: UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    """Generate a signed URL for a PDF in a shared packet (no auth required)."""
+    packet = await db.scalar(select(Packet).where(Packet.share_link == share_link))
+    if not packet:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Packet not found",
+        )
+
+    if resource_id not in (packet.resource_ids or []):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resource not found in packet",
+        )
+
+    resource = await db.scalar(select(Resource).where(Resource.id == resource_id))
+    if not resource or resource.type != "pdf":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resource not found",
+        )
+
+    supabase = get_supabase_storage_client()
+    bucket_name = get_storage_bucket_name()
+
+    try:
+        result = supabase.storage.from_(bucket_name).create_signed_url(
+            resource.content,
+            expires_in=3600,
+        )
+        signed_url = (
+            result.get("signed_url")
+            or result.get("signedURL")
+            or result.get("url")
+        )
+        if not signed_url:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to generate signed URL",
+            )
+        return SignedUrlResponse(signedUrl=signed_url)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to generate signed URL: {str(e)}",
         )
 
 

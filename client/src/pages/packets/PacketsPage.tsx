@@ -11,7 +11,7 @@ import { getPacket } from '@/lib/api';
 import type { Packet } from '../../../../shared/types';
 
 export function PacketsPage() {
-  const { session } = useAuth();
+  const { session, user } = useAuth();
   const [packets, setPackets] = useState<Packet[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
@@ -116,32 +116,33 @@ export function PacketsPage() {
                     </div>
                   )}
 
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={async () => {
-                        if (!session) return;
-                        try {
-                          // Fetch full packet with resources
-                          const fullPacket = await getPacket(session, packet.id);
-                          setEditingPacket(fullPacket);
-                        } catch (err) {
-                          alert(err instanceof Error ? err.message : 'Failed to load packet');
-                        }
-                      }}
-                    >
-                      Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      onClick={() => handleDelete(packet.id)}
-                      disabled={deletingPacketId === packet.id}
-                      className="flex-1 text-red-600 hover:text-red-700"
-                    >
-                      Delete
-                    </Button>
-                  </div>
+                  {packet.userId === user?.id && (
+                    <div className="flex gap-2 pt-2">
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        onClick={async () => {
+                          if (!session) return;
+                          try {
+                            const fullPacket = await getPacket(session, packet.id);
+                            setEditingPacket(fullPacket);
+                          } catch (err) {
+                            alert(err instanceof Error ? err.message : 'Failed to load packet');
+                          }
+                        }}
+                      >
+                        Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleDelete(packet.id)}
+                        disabled={deletingPacketId === packet.id}
+                        className="flex-1 text-red-600 hover:text-red-700"
+                      >
+                        Delete
+                      </Button>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}

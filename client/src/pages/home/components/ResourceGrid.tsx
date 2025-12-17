@@ -10,6 +10,7 @@ interface ResourceGridProps {
   resources: Resource[];
   selectedIds: Set<string>;
   deletingResourceId: string | null;
+  currentUserId?: string | null;
   onToggleSelection(resourceId: string): void;
   onEdit(resource: Resource): void;
   onDelete(resourceId: string): void;
@@ -31,6 +32,7 @@ export function ResourceGrid({
   resources,
   selectedIds,
   deletingResourceId,
+  currentUserId,
   onToggleSelection,
   onEdit,
   onDelete,
@@ -42,6 +44,7 @@ export function ResourceGrid({
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
       {resources.map((resource) => {
         const isSelected = selectedIds.has(resource.id);
+        const isOwner = currentUserId ? resource.userId === currentUserId : true;
         return (
           <Card
             key={resource.id}
@@ -119,27 +122,31 @@ export function ResourceGrid({
                     View
                   </Button>
                 )}
-                <Button
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(resource);
-                  }}
-                  className="flex-1 h-9"
-                >
-                  Edit
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(resource.id);
-                  }}
-                  disabled={deletingResourceId === resource.id}
-                  className="flex-1 h-9 text-red-600 hover:text-red-700"
-                >
-                  Delete
-                </Button>
+                {isOwner && (
+                  <>
+                    <Button
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(resource);
+                      }}
+                      className="flex-1 h-9"
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(resource.id);
+                      }}
+                      disabled={deletingResourceId === resource.id}
+                      className="flex-1 h-9 text-red-600 hover:text-red-700"
+                    >
+                      Delete
+                    </Button>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>

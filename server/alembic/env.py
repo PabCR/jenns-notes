@@ -18,6 +18,7 @@ from alembic import context
 from app.db import Base
 # Import models to register them with Base.metadata
 import app.models.resource  # noqa: F401
+import app.models.packet  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -106,4 +107,3 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
-

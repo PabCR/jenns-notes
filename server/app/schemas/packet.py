@@ -26,6 +26,8 @@ class PacketCreate(BaseModel):
         """Ensure at least one resource ID is provided."""
         if not v or len(v) == 0:
             raise ValueError("resourceIds must contain at least one resource ID")
+        if len(set(v)) != len(v):
+            raise ValueError("resourceIds must be unique")
         return v
 
 
@@ -45,6 +47,14 @@ class PacketUpdate(BaseModel):
             return v.strip()
         return v
 
+    @field_validator("resourceIds")
+    @classmethod
+    def validate_resource_ids_unique(cls, v: Optional[List[UUID]]) -> Optional[List[UUID]]:
+        """Ensure resourceIds remain unique when provided."""
+        if v is not None and len(set(v)) != len(v):
+            raise ValueError("resourceIds must be unique")
+        return v
+
 
 class PacketResponse(BaseModel):
     """Schema for packet response."""
@@ -57,6 +67,7 @@ class PacketResponse(BaseModel):
     updated_at: datetime = Field(serialization_alias="updatedAt")
     resources: List[ResourceResponse] = Field(default_factory=list)
     resource_count: Optional[int] = Field(None, serialization_alias="resourceCount")
+    resource_ids: List[UUID] = Field(default_factory=list, serialization_alias="resourceIds")
     
     model_config = ConfigDict(
         from_attributes=True,

@@ -104,6 +104,7 @@ export function HomePage() {
             resources={state.resources}
             selectedIds={state.selectedResources}
             deletingResourceId={state.deletingResourceId}
+            currentUserId={user?.id ?? null}
             onToggleSelection={handleToggleSelection}
             onEdit={(resource) => setState({ editingResource: resource })}
             onDelete={handleDelete}
