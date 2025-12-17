@@ -166,8 +166,7 @@ export function TypeStep({
         <Button
           onClick={onReviewClick}
           disabled={loading}
-          className="fixed bottom-6 right-6 z-50 shadow-lg h-14 px-6"
-          size="lg"
+          className="fixed bottom-6 right-6 z-50 shadow-lg h-14 px-6 text-base"
         >
           Review ({pendingResourcesCount})
         </Button>

@@ -23,7 +23,6 @@ export function SharedPacketPage() {
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
-  const [viewingPdfResource, setViewingPdfResource] = useState<Resource | null>(null);
   const [pdfViewerOpen, setPdfViewerOpen] = useState(false);
   const [pdfSignedUrl, setPdfSignedUrl] = useState<string | null>(null);
   const [loadingPdfUrl, setLoadingPdfUrl] = useState(false);
@@ -79,7 +78,6 @@ export function SharedPacketPage() {
     if (!shareLink || resource.type !== 'pdf') return;
 
     setLoadingPdfUrl(true);
-    setViewingPdfResource(resource);
     setPdfViewerOpen(true);
 
     try {
@@ -88,7 +86,6 @@ export function SharedPacketPage() {
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load PDF');
       setPdfViewerOpen(false);
-      setViewingPdfResource(null);
     } finally {
       setLoadingPdfUrl(false);
     }
@@ -96,7 +93,6 @@ export function SharedPacketPage() {
 
   const handleClosePdf = () => {
     setPdfViewerOpen(false);
-    setViewingPdfResource(null);
     setPdfSignedUrl(null);
   };
 

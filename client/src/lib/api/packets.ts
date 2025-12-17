@@ -102,10 +102,14 @@ export async function getPacket(
     if (resourceError) {
       throw new Error(resourceError.message);
     }
-    const order = new Map(resourceIds.map((rid: string, idx: number) => [rid, idx]));
+    const order = new Map<string, number>(resourceIds.map((rid: string, idx: number) => [rid, idx]));
     resources = (resourceData || [])
       .map(mapResourceRow)
-      .sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+      .sort((a, b) => {
+        const aIdx = order.get(a.id) ?? 0;
+        const bIdx = order.get(b.id) ?? 0;
+        return aIdx - bIdx;
+      });
   }
 
   const packet = mapPacket({ ...data, resources });
@@ -176,6 +180,10 @@ export async function getResourcesForPacket(
     throw new Error(error.message);
   }
 
-  const order = new Map(resourceIds.map((rid, idx) => [rid, idx]));
-  return (data || []).sort((a, b) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0));
+  const order = new Map<string, number>(resourceIds.map((rid, idx) => [rid, idx]));
+  return (data || []).sort((a, b) => {
+    const aIdx = order.get(a.id) ?? 0;
+    const bIdx = order.get(b.id) ?? 0;
+    return aIdx - bIdx;
+  });
 }
