@@ -51,3 +51,5 @@ server/test_results.txt
 alembic/versions/*.pyc
 
 test_results.txt
+
+.cursor/
