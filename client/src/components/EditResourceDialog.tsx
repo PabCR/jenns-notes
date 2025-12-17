@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { updateResource } from '@/lib/api';
-import type { Resource } from '../../../shared/types';
+import type { Resource } from '@/lib/types';
 import type { Session } from '@supabase/supabase-js';
 
 interface EditResourceDialogProps {

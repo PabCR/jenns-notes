@@ -12,11 +12,12 @@ import 'react-pdf/dist/Page/TextLayer.css';
 pdfjs.GlobalWorkerOptions.workerSrc = workerSrc;
 
 interface PDFViewerProps {
-  filePath: string;
+  filePath?: string;      // For authenticated access
+  signedUrl?: string;    // For public access
   onClose: () => void;
 }
 
-export function PDFViewer({ filePath, onClose }: PDFViewerProps) {
+export function PDFViewer({ filePath, signedUrl, onClose }: PDFViewerProps) {
   const { session } = useAuth();
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -30,9 +31,19 @@ export function PDFViewer({ filePath, onClose }: PDFViewerProps) {
       try {
         setLoading(true);
         setError(null);
-        const url = await fetchPDFBlob(session, filePath);
-        setPdfUrl(url);
-        setPageNumber(1); // Reset to first page when PDF changes
+        
+        if (signedUrl) {
+          // Public access: use signed URL directly
+          setPdfUrl(signedUrl);
+          setPageNumber(1);
+        } else if (filePath && session) {
+          // Authenticated access: fetch blob and create object URL
+          const url = await fetchPDFBlob(session, filePath);
+          setPdfUrl(url);
+          setPageNumber(1);
+        } else {
+          throw new Error('Either signedUrl or filePath with session must be provided');
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load PDF');
       } finally {
@@ -41,7 +52,7 @@ export function PDFViewer({ filePath, onClose }: PDFViewerProps) {
     };
 
     loadPDF();
-  }, [filePath, session]);
+  }, [filePath, signedUrl, session]);
 
   // Set responsive page width on mount and resize
   useEffect(() => {
@@ -59,14 +70,15 @@ export function PDFViewer({ filePath, onClose }: PDFViewerProps) {
     return () => window.removeEventListener('resize', updateWidth);
   }, []);
 
-  // Cleanup blob URL when component unmounts or pdfUrl changes
+  // Cleanup blob URL when component unmounts or pdfUrl changes (only for authenticated flow)
   useEffect(() => {
     return () => {
-      if (pdfUrl) {
+      // Only revoke blob URLs (created from fetchPDFBlob), not signed URLs
+      if (pdfUrl && filePath && !signedUrl) {
         URL.revokeObjectURL(pdfUrl);
       }
     };
-  }, [pdfUrl]);
+  }, [pdfUrl, filePath, signedUrl]);
 
   return (
     <div className="flex flex-col h-full" data-pdf-container>

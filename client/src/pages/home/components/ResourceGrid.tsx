@@ -1,7 +1,7 @@
 /**
  * Resource card grid with selection, actions, and metadata display.
  */
-import type { Resource } from '../../../../../shared/types';
+import type { Resource } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { FileText, Link as LinkIcon, StickyNote } from 'lucide-react';

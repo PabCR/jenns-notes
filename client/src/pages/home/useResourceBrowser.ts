@@ -4,7 +4,7 @@
 import { useCallback, useEffect, useReducer } from 'react';
 import { deleteResource, getResources } from '@/lib/api';
 import type { ApiSession } from '@/lib/api';
-import type { Resource } from '../../../../shared/types';
+import type { Resource } from '@/lib/types';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
 
 interface HomeState {

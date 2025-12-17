@@ -2,21 +2,29 @@
  * Packets page displays all user packets in a grid.
  */
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { listPackets, deletePacket } from '@/lib/api';
 import { EditPacketDialog } from './components/EditPacketDialog';
 import { getPacket } from '@/lib/api';
-import type { Packet } from '../../../../shared/types';
+import { copyToClipboard } from '@/lib/utils';
+import type { Packet } from '@/lib/types';
+import { Check, Copy, ExternalLink } from 'lucide-react';
+import QRCode from 'react-qr-code';
 
 export function PacketsPage() {
   const { session, user } = useAuth();
+  const navigate = useNavigate();
   const [packets, setPackets] = useState<Packet[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [deletingPacketId, setDeletingPacketId] = useState<string | null>(null);
   const [editingPacket, setEditingPacket] = useState<Packet | null>(null);
+  const [copiedShareLink, setCopiedShareLink] = useState<string | null>(null);
 
   const fetchPackets = async () => {
     if (!session) return;
@@ -58,6 +66,23 @@ export function PacketsPage() {
       month: 'short',
       day: 'numeric',
     });
+
+  const getShareUrl = (shareLink: string) => {
+    return `${window.location.origin}/shared/${shareLink}`;
+  };
+
+  const handleCopyLink = async (shareLink: string) => {
+    const shareUrl = getShareUrl(shareLink);
+    const success = await copyToClipboard(shareUrl);
+    if (success) {
+      setCopiedShareLink(shareLink);
+      setTimeout(() => setCopiedShareLink(null), 2000);
+    }
+  };
+
+  const handleViewLink = (shareLink: string) => {
+    navigate(`/shared/${shareLink}`);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8 pb-32">
@@ -111,8 +136,50 @@ export function PacketsPage() {
                   </div>
 
                   {packet.shareLink && (
-                    <div className="p-2 bg-gray-50 rounded text-xs font-mono text-gray-600 break-all">
-                      {packet.shareLink}
+                    <div className="space-y-2">
+                      <Label className="text-xs text-gray-500">Share Link</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={getShareUrl(packet.shareLink)}
+                          readOnly
+                          className="font-mono text-xs flex-1"
+                        />
+                        <Button
+                          onClick={() => handleCopyLink(packet.shareLink)}
+                          variant="outline"
+                          className="flex-shrink-0 h-10 w-10 p-0"
+                          title="Copy link"
+                        >
+                          {copiedShareLink === packet.shareLink ? (
+                            <Check className="h-4 w-4 text-green-600" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          onClick={() => handleViewLink(packet.shareLink)}
+                          variant="outline"
+                          className="flex-shrink-0 h-10 w-10 p-0"
+                          title="View shared packet"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {copiedShareLink === packet.shareLink && (
+                        <p className="text-xs text-green-600">Link copied to clipboard!</p>
+                      )}
+                      <div className="flex flex-col items-center space-y-2 pt-2">
+                        <div className="border rounded-md p-2 bg-white">
+                          <QRCode
+                            value={getShareUrl(packet.shareLink)}
+                            size={200}
+                            level="H"
+                          />
+                        </div>
+                        <p className="text-xs text-gray-500 text-center">
+                          Scan to access packet
+                        </p>
+                      </div>
                     </div>
                   )}
 

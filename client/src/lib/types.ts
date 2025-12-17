@@ -1,4 +1,4 @@
-// Shared TypeScript types for Nurse Resource Binder
+// TypeScript types for Nurse Resource Binder
 
 export type ResourceType = 'pdf' | 'link' | 'note';
 
@@ -41,4 +41,3 @@ export interface ShareHistory {
   shareMethod: ShareMethod;
   sharedAt: string;
 }
-

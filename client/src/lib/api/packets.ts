@@ -3,7 +3,7 @@
  */
 import type { ApiSession } from './client';
 import { apiRequest } from './client';
-import type { Packet } from '../../../../shared/types';
+import type { Packet } from '@/lib/types';
 import { supabase } from '@/lib/supabase';
 
 function mapResourceRow(row: any) {
