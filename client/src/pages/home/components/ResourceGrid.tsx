@@ -4,7 +4,7 @@
 import type { Resource } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FileText, Link as LinkIcon, StickyNote } from 'lucide-react';
+import { FileText, Link as LinkIcon, StickyNote, Star } from 'lucide-react';
 
 interface ResourceGridProps {
   resources: Resource[];
@@ -12,6 +12,7 @@ interface ResourceGridProps {
   deletingResourceId: string | null;
   currentUserId?: string | null;
   onToggleSelection(resourceId: string): void;
+  onToggleFavorite(resourceId: string): void;
   onEdit(resource: Resource): void;
   onDelete(resourceId: string): void;
   onOpenLink(url: string): void;
@@ -34,6 +35,7 @@ export function ResourceGrid({
   deletingResourceId,
   currentUserId,
   onToggleSelection,
+  onToggleFavorite,
   onEdit,
   onDelete,
   onOpenLink,
@@ -96,6 +98,26 @@ export function ResourceGrid({
               )}
 
               <p className="text-xs text-gray-400">{formatDate(resource.createdAt)}</p>
+
+              {/* Star icon for favorites */}
+              <div className="flex justify-end pt-1">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleFavorite(resource.id);
+                  }}
+                  className="p-1 hover:bg-gray-100 rounded transition-colors"
+                  aria-label={resource.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                >
+                  <Star
+                    className={`h-5 w-5 ${
+                      resource.isFavorite
+                        ? 'fill-yellow-400 text-yellow-400'
+                        : 'text-gray-400 hover:text-yellow-400'
+                    } transition-colors`}
+                  />
+                </button>
+              </div>
 
               <div className="flex gap-2 pt-2">
                 {resource.type === 'link' && (

@@ -4,9 +4,11 @@ from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db import get_db
+from app.models.resource import Resource
 from app.schemas.gemini import ResourceMetadata
 from app.schemas.resource import ResourceCreate, ResourceResponse, ResourceUpdate
 from app.services.resource_metadata_service import generate_metadata_response
@@ -14,8 +16,10 @@ from app.services.resource_service import (
     apply_resource_updates,
     create_resource_entry,
     delete_resource_entry,
+    get_favorite_status,
     get_owned_resource,
     list_resources_for_user,
+    toggle_favorite,
 )
 from app.utils.auth import get_current_user
 
@@ -41,12 +45,36 @@ async def list_resources(
         None, description="Search term for title, description, or tags"
     ),
     type: Optional[str] = Query(None, description="Filter by resource type"),  # noqa: A002
+    ownership: Optional[str] = Query(
+        'all', description="Filter by ownership: 'mine', 'others', or 'all'"
+    ),
+    favorites_only: bool = Query(False, description="Show only favorited resources"),
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    """List all resources for the current user with optional search and type filtering."""
+    """List resources with optional search, type, ownership, and favorites filtering."""
     user_id = UUID(current_user["id"])
-    return await list_resources_for_user(user_id, search, type, db)
+    
+    # Validate ownership parameter
+    if ownership not in ['mine', 'others', 'all']:
+        ownership = 'all'
+    
+    resources = await list_resources_for_user(
+        user_id, search, type, db, ownership, favorites_only
+    )
+    
+    # Get favorite status for all resources
+    resource_ids = [r.id for r in resources]
+    favorite_ids = await get_favorite_status(user_id, resource_ids, db)
+    
+    # Build response with favorite status
+    responses = []
+    for resource in resources:
+        resource_dict = ResourceResponse.model_validate(resource).model_dump()
+        resource_dict['is_favorite'] = resource.id in favorite_ids
+        responses.append(ResourceResponse(**resource_dict))
+    
+    return responses
 
 
 @router.get("/{resource_id}", response_model=ResourceResponse)
@@ -102,6 +130,32 @@ async def delete_resource(
 
     await delete_resource_entry(resource, db)
     return None
+
+
+@router.post("/{resource_id}/favorite", response_model=ResourceResponse)
+async def toggle_resource_favorite(
+    resource_id: UUID,
+    current_user: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Toggle favorite status for a resource."""
+    user_id = UUID(current_user["id"])
+    is_favorited = await toggle_favorite(user_id, resource_id, db)
+    
+    # Get the resource to return
+    resource = await db.scalar(
+        select(Resource).where(Resource.id == resource_id)
+    )
+    if not resource:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resource not found",
+        )
+    
+    # Build response with favorite status
+    resource_dict = ResourceResponse.model_validate(resource).model_dump()
+    resource_dict['is_favorite'] = is_favorited
+    return ResourceResponse(**resource_dict)
 
 
 @router.post("/generate-tags", response_model=ResourceMetadata, status_code=status.HTTP_200_OK)

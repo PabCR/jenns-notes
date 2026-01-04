@@ -1,5 +1,5 @@
 # SQLAlchemy models
-from app.models.resource import Resource
+from app.models.resource import Resource, UserResourceFavorite
 from app.models.packet import Packet
 
-__all__ = ["Resource", "Packet"]
+__all__ = ["Resource", "UserResourceFavorite", "Packet"]

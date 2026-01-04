@@ -18,6 +18,7 @@ export interface Resource {
   topic?: string;
   createdAt: string;
   updatedAt: string;
+  isFavorite?: boolean;
 }
 
 export interface Packet {

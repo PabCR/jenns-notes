@@ -25,6 +25,7 @@ export function HomePage() {
     fetchResources,
     handleDelete,
     handleToggleSelection,
+    handleToggleFavorite,
     clearSearch,
     openPdfViewer,
     closePdfViewer,
@@ -48,10 +49,14 @@ export function HomePage() {
         <FilterBar
           searchQuery={state.searchQuery}
           typeFilter={state.typeFilter}
+          ownershipFilter={state.ownershipFilter}
+          favoritesOnly={state.favoritesOnly}
           userEmail={user?.email}
           onSearchChange={(value) => setState({ searchQuery: value })}
           onClear={clearSearch}
           onTypeChange={(value) => setState({ typeFilter: value })}
+          onOwnershipChange={(value) => setState({ ownershipFilter: value })}
+          onFavoritesToggle={(value) => setState({ favoritesOnly: value })}
           onSignOut={signOut}
         />
 
@@ -106,6 +111,7 @@ export function HomePage() {
             deletingResourceId={state.deletingResourceId}
             currentUserId={user?.id ?? null}
             onToggleSelection={handleToggleSelection}
+            onToggleFavorite={handleToggleFavorite}
             onEdit={(resource) => setState({ editingResource: resource })}
             onDelete={handleDelete}
             onOpenLink={(url) => window.open(url, '_blank', 'noopener,noreferrer')}
