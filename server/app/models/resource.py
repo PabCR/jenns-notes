@@ -85,3 +85,31 @@ class Resource(Base):
         Index("idx_resources_created_at", "created_at", postgresql_ops={"created_at": "DESC"}),
     )
 
+
+class UserResourceFavorite(Base):
+    """Model representing user favorites for resources."""
+    
+    __tablename__ = "user_resource_favorites"
+    
+    user_id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        nullable=False
+    )
+    resource_id = Column(
+        UUID(as_uuid=True),
+        primary_key=True,
+        nullable=False
+    )
+    created_at = Column(
+        TIMESTAMP(timezone=True),
+        nullable=False,
+        server_default=func.now()
+    )
+    
+    # Table constraints
+    __table_args__ = (
+        Index("idx_favorites_user_id", "user_id"),
+        Index("idx_favorites_resource_id", "resource_id"),
+    )
+

@@ -9,6 +9,7 @@ export {
   getResources,
   updateResource,
   deleteResource,
+  toggleFavorite,
 } from './api/resources';
 export {
   requestPresignedUrl,

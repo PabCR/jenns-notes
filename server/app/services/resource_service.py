@@ -1,13 +1,13 @@
 """Resource CRUD service helpers to keep route handlers lean."""
 import logging
-from typing import List, Optional
+from typing import List, Optional, Literal
 from uuid import UUID
 
 from fastapi import HTTPException, status
 from sqlalchemy import delete, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.resource import Resource
+from app.models.resource import Resource, UserResourceFavorite
 from app.models.packet import Packet
 from app.schemas.resource import ResourceCreate, ResourceUpdate
 from app.utils.supabase import delete_file_from_storage
@@ -38,10 +38,20 @@ async def list_resources_for_user(
     search: Optional[str],
     type_filter: Optional[str],
     db: AsyncSession,
+    ownership_filter: Optional[Literal['mine', 'others', 'all']] = 'all',
+    favorites_only: bool = False,
 ) -> List[Resource]:
-    """Return user resources with optional search and type filter."""
-    query = select(Resource).where(Resource.user_id == user_id)
+    """Return resources with optional search, type, ownership, and favorites filters."""
+    # Start with base query - show all resources by default
+    query = select(Resource)
 
+    # Apply ownership filter
+    if ownership_filter == 'mine':
+        query = query.where(Resource.user_id == user_id)
+    elif ownership_filter == 'others':
+        query = query.where(Resource.user_id != user_id)
+
+    # Apply search filter
     if search and search.strip():
         search_term = f"%{search.strip()}%"
         query = query.where(
@@ -52,8 +62,20 @@ async def list_resources_for_user(
           )
         )
 
+    # Apply type filter
     if type_filter:
         query = query.where(Resource.type == type_filter)
+
+    # Apply favorites filter - INNER JOIN with favorites table
+    if favorites_only:
+        from sqlalchemy import and_
+        query = query.join(
+            UserResourceFavorite,
+            and_(
+                UserResourceFavorite.resource_id == Resource.id,
+                UserResourceFavorite.user_id == user_id
+            )
+        )
 
     query = query.order_by(Resource.created_at.desc())
     result = await db.execute(query)
@@ -118,3 +140,66 @@ async def delete_resource_entry(resource: Resource, db: AsyncSession) -> None:
 
     await db.execute(delete(Resource).where(Resource.id == resource.id))
     await db.commit()
+
+
+async def get_favorite_status(
+    user_id: UUID,
+    resource_ids: List[UUID],
+    db: AsyncSession,
+) -> set[UUID]:
+    """Get set of resource IDs that are favorited by the user."""
+    if not resource_ids:
+        return set()
+    
+    result = await db.execute(
+        select(UserResourceFavorite.resource_id).where(
+            UserResourceFavorite.user_id == user_id,
+            UserResourceFavorite.resource_id.in_(resource_ids)
+        )
+    )
+    return set(result.scalars().all())
+
+
+async def toggle_favorite(
+    user_id: UUID,
+    resource_id: UUID,
+    db: AsyncSession,
+) -> bool:
+    """Toggle favorite status for a resource. Returns True if favorited, False if unfavorited."""
+    # Check if resource exists
+    resource = await db.scalar(
+        select(Resource).where(Resource.id == resource_id)
+    )
+    if not resource:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Resource not found",
+        )
+    
+    # Check if favorite already exists
+    existing = await db.scalar(
+        select(UserResourceFavorite).where(
+            UserResourceFavorite.user_id == user_id,
+            UserResourceFavorite.resource_id == resource_id
+        )
+    )
+    
+    if existing:
+        # Remove favorite
+        await db.execute(
+            delete(UserResourceFavorite).where(
+                UserResourceFavorite.user_id == user_id,
+                UserResourceFavorite.resource_id == resource_id
+            )
+        )
+        await db.commit()
+        return False
+    else:
+        # Add favorite
+        favorite = UserResourceFavorite(
+            user_id=user_id,
+            resource_id=resource_id
+        )
+        db.add(favorite)
+        await db.commit()
+        return True

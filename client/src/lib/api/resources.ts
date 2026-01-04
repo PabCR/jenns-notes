@@ -9,18 +9,19 @@ import { supabase } from '@/lib/supabase';
 function mapResource(row: any): Resource {
   return {
     id: row.id,
-    userId: row.user_id,
+    userId: row.userId || row.user_id,
     title: row.title,
     description: row.description ?? undefined,
     type: row.type,
     content: row.content,
     tags: row.tags ?? [],
-    autoTagged: row.auto_tagged ?? false,
+    autoTagged: row.autoTagged ?? row.auto_tagged ?? false,
     condition: row.condition ?? undefined,
     audience: row.audience ?? undefined,
     topic: row.topic ?? undefined,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    createdAt: row.createdAt || row.created_at,
+    updatedAt: row.updatedAt || row.updated_at,
+    isFavorite: row.isFavorite ?? row.is_favorite ?? false,
   };
 }
 
@@ -44,31 +45,40 @@ export async function createResource(
 }
 
 /**
- * Fetch resources for the current user with optional filtering.
+ * Fetch resources with optional filtering.
  */
 export async function getResources(
-  _session: ApiSession,
-  params?: { search?: string; type?: 'note' | 'pdf' | 'link' },
+  session: ApiSession,
+  params?: {
+    search?: string;
+    type?: 'note' | 'pdf' | 'link';
+    ownership?: 'mine' | 'others' | 'all';
+    favoritesOnly?: boolean;
+  },
 ): Promise<Resource[]> {
-  let query = supabase
-    .from('resources')
-    .select('*')
-    .order('created_at', { ascending: false });
-
-  if (params?.type) {
-    query = query.eq('type', params.type);
-  }
-
+  const searchParams = new URLSearchParams();
+  
   if (params?.search) {
-    const term = `%${params.search}%`;
-    query = query.or(`title.ilike.${term},description.ilike.${term}`);
+    searchParams.append('search', params.search);
+  }
+  if (params?.type) {
+    searchParams.append('type', params.type);
+  }
+  if (params?.ownership) {
+    searchParams.append('ownership', params.ownership);
+  }
+  if (params?.favoritesOnly) {
+    searchParams.append('favorites_only', 'true');
   }
 
-  const { data, error } = await query;
-  if (error) {
-    throw new Error(error.message);
-  }
-  return (data || []).map(mapResource);
+  const queryString = searchParams.toString();
+  const endpoint = `/api/resources${queryString ? `?${queryString}` : ''}`;
+  
+  const data = await apiRequest<Resource[]>(endpoint, session, {
+    method: 'GET',
+  });
+  
+  return data.map(mapResource);
 }
 
 /**
@@ -115,4 +125,17 @@ export async function deleteResource(
   return apiRequest<void>(`/api/resources/${id}`, session, {
     method: 'DELETE',
   });
+}
+
+/**
+ * Toggle favorite status for a resource.
+ */
+export async function toggleFavorite(
+  session: ApiSession,
+  resourceId: string,
+): Promise<Resource> {
+  const data = await apiRequest<Resource>(`/api/resources/${resourceId}/favorite`, session, {
+    method: 'POST',
+  });
+  return mapResource(data);
 }

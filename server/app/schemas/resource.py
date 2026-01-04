@@ -107,6 +107,7 @@ class ResourceResponse(BaseModel):
     topic: Optional[str]
     created_at: datetime = Field(serialization_alias="createdAt")
     updated_at: datetime = Field(serialization_alias="updatedAt")
+    is_favorite: Optional[bool] = Field(default=False, serialization_alias="isFavorite")
     
     model_config = ConfigDict(
         from_attributes=True,

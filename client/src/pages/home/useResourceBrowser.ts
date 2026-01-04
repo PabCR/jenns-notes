@@ -2,7 +2,7 @@
  * Shared state and behaviors for the Home resource browser.
  */
 import { useCallback, useEffect, useReducer } from 'react';
-import { deleteResource, getResources } from '@/lib/api';
+import { deleteResource, getResources, toggleFavorite } from '@/lib/api';
 import type { ApiSession } from '@/lib/api';
 import type { Resource } from '@/lib/types';
 import { useDebouncedValue } from '@/hooks/useDebouncedValue';
@@ -16,6 +16,8 @@ interface HomeState {
   successMessage: string;
   searchQuery: string;
   typeFilter: 'note' | 'pdf' | 'link' | null;
+  ownershipFilter: 'mine' | 'others' | 'all' | null;
+  favoritesOnly: boolean;
   selectedResources: Set<string>;
   pdfViewerOpen: boolean;
   pdfViewerPath: string | null;
@@ -34,6 +36,8 @@ const createInitialState = (): HomeState => ({
   successMessage: '',
   searchQuery: '',
   typeFilter: null,
+  ownershipFilter: 'all',
+  favoritesOnly: false,
   selectedResources: new Set<string>(),
   pdfViewerOpen: false,
   pdfViewerPath: null,
@@ -59,6 +63,8 @@ export function useResourceBrowser(session: ApiSession) {
       const data = await getResources(session, {
         search: debouncedSearch || undefined,
         type: state.typeFilter || undefined,
+        ownership: state.ownershipFilter || undefined,
+        favoritesOnly: state.favoritesOnly || undefined,
       });
       setState({ resources: data });
     } catch (err) {
@@ -68,7 +74,7 @@ export function useResourceBrowser(session: ApiSession) {
     } finally {
       setState({ loading: false });
     }
-  }, [debouncedSearch, session, state.typeFilter]);
+  }, [debouncedSearch, session, state.typeFilter, state.ownershipFilter, state.favoritesOnly]);
 
   useEffect(() => {
     fetchResources();
@@ -112,8 +118,28 @@ export function useResourceBrowser(session: ApiSession) {
   );
 
   const clearSearch = useCallback(() => {
-    setState({ searchQuery: '', typeFilter: null });
+    setState({ searchQuery: '', typeFilter: null, ownershipFilter: 'all', favoritesOnly: false });
   }, []);
+
+  const handleToggleFavorite = useCallback(
+    async (resourceId: string) => {
+      if (!session) return;
+
+      try {
+        const updatedResource = await toggleFavorite(session, resourceId);
+        setState((prev) => ({
+          resources: prev.resources.map((r) =>
+            r.id === resourceId ? updatedResource : r
+          ),
+        }));
+      } catch (err) {
+        setState({
+          error: err instanceof Error ? err.message : 'Failed to toggle favorite',
+        });
+      }
+    },
+    [session],
+  );
 
   const openPdfViewer = useCallback((filePath: string) => {
     setState({ pdfViewerOpen: true, pdfViewerPath: filePath });
@@ -130,6 +156,7 @@ export function useResourceBrowser(session: ApiSession) {
     fetchResources,
     handleDelete,
     handleToggleSelection,
+    handleToggleFavorite,
     clearSearch,
     openPdfViewer,
     closePdfViewer,
