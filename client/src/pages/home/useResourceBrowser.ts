@@ -18,6 +18,7 @@ interface HomeState {
   typeFilter: 'note' | 'pdf' | 'link' | null;
   ownershipFilter: 'mine' | 'others' | 'all' | null;
   favoritesOnly: boolean;
+  sort: 'alphabetical' | 'newest';
   selectedResources: Set<string>;
   pdfViewerOpen: boolean;
   pdfViewerPath: string | null;
@@ -38,6 +39,7 @@ const createInitialState = (): HomeState => ({
   typeFilter: null,
   ownershipFilter: 'all',
   favoritesOnly: false,
+  sort: 'alphabetical',
   selectedResources: new Set<string>(),
   pdfViewerOpen: false,
   pdfViewerPath: null,
@@ -65,6 +67,7 @@ export function useResourceBrowser(session: ApiSession) {
         type: state.typeFilter || undefined,
         ownership: state.ownershipFilter || undefined,
         favoritesOnly: state.favoritesOnly || undefined,
+        sort: state.sort,
       });
       setState({ resources: data });
     } catch (err) {
@@ -74,7 +77,7 @@ export function useResourceBrowser(session: ApiSession) {
     } finally {
       setState({ loading: false });
     }
-  }, [debouncedSearch, session, state.typeFilter, state.ownershipFilter, state.favoritesOnly]);
+  }, [debouncedSearch, session, state.typeFilter, state.ownershipFilter, state.favoritesOnly, state.sort]);
 
   useEffect(() => {
     fetchResources();
@@ -121,6 +124,10 @@ export function useResourceBrowser(session: ApiSession) {
     setState({ searchQuery: '', typeFilter: null, ownershipFilter: 'all', favoritesOnly: false });
   }, []);
 
+  const setSort = useCallback((sort: 'alphabetical' | 'newest') => {
+    setState({ sort });
+  }, []);
+
   const handleToggleFavorite = useCallback(
     async (resourceId: string) => {
       if (!session) return;
@@ -158,6 +165,7 @@ export function useResourceBrowser(session: ApiSession) {
     handleToggleSelection,
     handleToggleFavorite,
     clearSearch,
+    setSort,
     openPdfViewer,
     closePdfViewer,
   };
