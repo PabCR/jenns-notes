@@ -11,7 +11,7 @@ from app.routes import resources_router, objects_router, packets_router
 load_dotenv()
 
 app = FastAPI(
-    title="Nurse Resource Binder API",
+    title="Jenns Notes API",
     description="API for managing nurse educational resources and packets",
     version="0.1.0",
 )
@@ -37,7 +37,7 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-    return {"message": "Nurse Resource Binder API"}
+    return {"message": "Jenns Notes API"}
 
 
 @app.get("/health")
