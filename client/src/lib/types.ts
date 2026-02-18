@@ -1,4 +1,4 @@
-// TypeScript types for Nurse Resource Binder
+// TypeScript types for Jenns Notes
 
 export type ResourceType = 'pdf' | 'link' | 'note';
 

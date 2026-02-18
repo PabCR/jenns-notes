@@ -40,6 +40,7 @@ async def list_resources_for_user(
     db: AsyncSession,
     ownership_filter: Optional[Literal['mine', 'others', 'all']] = 'all',
     favorites_only: bool = False,
+    sort: str = "alphabetical",
 ) -> List[Resource]:
     """Return resources with optional search, type, ownership, and favorites filters."""
     # Start with base query - show all resources by default
@@ -77,7 +78,10 @@ async def list_resources_for_user(
             )
         )
 
-    query = query.order_by(Resource.created_at.desc())
+    if sort == "newest":
+        query = query.order_by(Resource.created_at.desc())
+    else:
+        query = query.order_by(Resource.title.asc())
     result = await db.execute(query)
     return result.scalars().all()
 

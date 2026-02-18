@@ -54,6 +54,7 @@ export async function getResources(
     type?: 'note' | 'pdf' | 'link';
     ownership?: 'mine' | 'others' | 'all';
     favoritesOnly?: boolean;
+    sort?: 'alphabetical' | 'newest';
   },
 ): Promise<Resource[]> {
   const searchParams = new URLSearchParams();
@@ -69,6 +70,9 @@ export async function getResources(
   }
   if (params?.favoritesOnly) {
     searchParams.append('favorites_only', 'true');
+  }
+  if (params?.sort) {
+    searchParams.append('sort', params.sort);
   }
 
   const queryString = searchParams.toString();

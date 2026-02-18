@@ -1,5 +1,5 @@
 # Technology Stack Reference
-## Nurse Resource Binder
+## Jenns Notes
 ## Development Principles
 
 **Optimize For:**

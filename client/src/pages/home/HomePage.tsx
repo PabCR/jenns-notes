@@ -27,6 +27,7 @@ export function HomePage() {
     handleToggleSelection,
     handleToggleFavorite,
     clearSearch,
+    setSort,
     openPdfViewer,
     closePdfViewer,
   } = useResourceBrowser(session);
@@ -51,12 +52,14 @@ export function HomePage() {
           typeFilter={state.typeFilter}
           ownershipFilter={state.ownershipFilter}
           favoritesOnly={state.favoritesOnly}
+          sort={state.sort}
           userEmail={user?.email}
           onSearchChange={(value) => setState({ searchQuery: value })}
           onClear={clearSearch}
           onTypeChange={(value) => setState({ typeFilter: value })}
           onOwnershipChange={(value) => setState({ ownershipFilter: value })}
           onFavoritesToggle={(value) => setState({ favoritesOnly: value })}
+          onSortChange={setSort}
           onSignOut={signOut}
         />
 

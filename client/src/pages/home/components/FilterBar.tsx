@@ -10,12 +10,14 @@ interface FilterBarProps {
   typeFilter: 'note' | 'pdf' | 'link' | null;
   ownershipFilter: 'mine' | 'others' | 'all' | null;
   favoritesOnly: boolean;
+  sort: 'alphabetical' | 'newest';
   userEmail?: string | null;
   onSearchChange(value: string): void;
   onClear(): void;
   onTypeChange(value: 'note' | 'pdf' | 'link' | null): void;
   onOwnershipChange(value: 'mine' | 'others' | 'all' | null): void;
   onFavoritesToggle(value: boolean): void;
+  onSortChange(value: 'alphabetical' | 'newest'): void;
   onSignOut(): void;
 }
 
@@ -27,12 +29,14 @@ export function FilterBar({
   typeFilter,
   ownershipFilter,
   favoritesOnly,
+  sort,
   userEmail,
   onSearchChange,
   onClear,
   onTypeChange,
   onOwnershipChange,
   onFavoritesToggle,
+  onSortChange,
   onSignOut,
 }: FilterBarProps) {
   return (
@@ -101,6 +105,16 @@ export function FilterBar({
           >
             {favoritesOnly ? '★ Favorites' : '☆ Favorites'}
           </Button>
+
+          {/* Sort order */}
+          <select
+            value={sort}
+            onChange={(e) => onSortChange(e.target.value as 'alphabetical' | 'newest')}
+            className="px-3 py-2 border border-gray-300 rounded-md bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-auto"
+          >
+            <option value="alphabetical">A–Z</option>
+            <option value="newest">Newest</option>
+          </select>
         </div>
       </div>
     </div>

@@ -49,18 +49,19 @@ async def list_resources(
         'all', description="Filter by ownership: 'mine', 'others', or 'all'"
     ),
     favorites_only: bool = Query(False, description="Show only favorited resources"),
+    sort: str = Query("alphabetical", description="Sort order: 'alphabetical' or 'newest'"),
     current_user: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     """List resources with optional search, type, ownership, and favorites filtering."""
     user_id = UUID(current_user["id"])
-    
+
     # Validate ownership parameter
     if ownership not in ['mine', 'others', 'all']:
         ownership = 'all'
-    
+
     resources = await list_resources_for_user(
-        user_id, search, type, db, ownership, favorites_only
+        user_id, search, type, db, ownership, favorites_only, sort
     )
     
     # Get favorite status for all resources

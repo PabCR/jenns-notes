@@ -1,4 +1,4 @@
-# Nurse Resource Binder
+# Jenns Notes
 
 A web application for oncology nurses to manage and share patient educational resources.
 
