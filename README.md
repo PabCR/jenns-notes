@@ -80,6 +80,3 @@ Follow the vertical implementation plan in `docs/implementation-plan.md` to buil
 - **Auth**: Supabase Auth
 - **AI**: Google Gemini API
 
-## License
-
-[Your License Here]
